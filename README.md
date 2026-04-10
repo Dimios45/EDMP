@@ -123,6 +123,68 @@ guides: [1, 2, 3]
 ## Results
 - For replicating the results shown in the paper, please use cfg ```./benchmark/cfgs/cfg1.yaml```
 
+---
+
+## GPD Extension — Guided Polynomial Diffusion
+
+This repository includes a full implementation of [GPD (arxiv 2501.18229)](https://arxiv.org/abs/2501.18229) inside the EDMP codebase. GPD replaces raw waypoints with Bernstein polynomial control points (8 vs 50) and uses a shorter diffusion chain (T=64 vs T=255), achieving a **4.1× planning speedup** at a moderate accuracy trade-off.
+
+For the full write-up, implementation details, and benchmark results, see [BLOG.md](BLOG.md).
+
+### Files Added
+
+| File | Description |
+|------|-------------|
+| `gpd/bernstein.py` | Bernstein basis matrix B (50×8), waypoint↔control-point conversion |
+| `gpd/diffusion.py` | `PolynomialDiffusion` — GPU-native denoising in control-point space |
+| `gpd/stitch.py` | Algorithm 2: stitches K candidate trajectories into one collision-free path |
+| `gpd/dataset.py` | `BernsteinTrajectoryDataset` for training |
+| `gpd/preprocess_data.py` | Converts MPInets HDF5 waypoints → Bernstein control points |
+| `gpd/merge_datasets.py` | Merges two preprocessed HDF5 files |
+| `gpd/edmp_gpu.py` | GPU-native EDMP denoising (eliminates 510 CPU↔GPU copies/scene) |
+| `train_gpd.py` | Training script for the GPD model |
+| `infer_gpd.py` | Single-scene GPD inference |
+| `compare.py` | Head-to-head EDMP vs GPD benchmark (1800 scenes) |
+| `run_worker.py` | Sharded worker for parallel benchmarking |
+| `launch_parallel.sh` | Runs GPD + EDMP simultaneously on one GPU |
+| `merge_results.py` | Aggregates per-worker JSON results and prints summary |
+
+### Quick Start — GPD
+
+```bash
+# 1. Preprocess MPInets data
+python gpd/preprocess_data.py --input data/mpinets_dataset.hdf5 \
+    --key hybrid_solutions --output gpd_train_hybrid.hdf5 --transpose --n_control 8
+python gpd/preprocess_data.py --input data/mpinets_dataset.hdf5 \
+    --key global_solutions --output gpd_train_global.hdf5 --transpose --n_control 8
+python gpd/merge_datasets.py --a gpd_train_hybrid.hdf5 --b gpd_train_global.hdf5 \
+    --out gpd_train_combined.hdf5
+
+# 2. Train (~8 hr on RTX 4090)
+python train_gpd.py --dataset gpd_train_combined.hdf5 \
+    --T 64 --n_control 8 --epochs 20000 --batch_size 2048
+
+# 3. Single-scene inference
+python infer_gpd.py -c benchmark/cfgs/cfg_gpd.yaml
+
+# 4. Full 1800-scene parallel benchmark
+bash launch_parallel.sh --full
+```
+
+### Benchmark Results (RTX 4090, 1800 scenes)
+
+![Benchmark Dashboard](assets/benchmark_dashboard.png)
+
+| Scene Type | EDMP SR | GPD SR | EDMP avg | GPD avg |
+|------------|---------|--------|----------|---------|
+| tabletop (600) | 95.2% | **96.2%** | 7.42s | **1.89s** |
+| cubby (300) | **60.0%** | 40.7% | 6.77s | **1.72s** |
+| merged_cubby (300) | **48.3%** | 34.7% | 6.55s | **1.68s** |
+| dresser (600) | **48.2%** | 43.3% | 10.71s | **2.48s** |
+| **Overall (1800)** | **65.8%** | 59.1% | 8.27s | **2.02s** |
+
+GPD is **4.1× faster** per scene. EDMP is **6.7 pp more accurate** overall, with the largest gap in constrained environments (cubby, merged_cubby) where polynomial smoothness limits trajectory flexibility.
+
 ## Citation
 If you find our work useful in your research, please cite:
 ```

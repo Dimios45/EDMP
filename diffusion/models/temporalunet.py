@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 import os
-import torchvision.transforms.functional as tvtf
 
 from diffusion.models.blocks import *
 
@@ -36,20 +36,27 @@ class TemporalUNet(nn.Module):
                                         nn.Conv1d(dims[1], input_dim, kernel_size = 1))
         
         self.model_name = model_name
+        self.weights_path = os.path.join(self.model_name, "weights_latest.pt")
+        self.losses_path = os.path.join(self.model_name, "losses.npy")
+
         if not os.path.exists(model_name):
             os.mkdir(model_name)
             self.losses = np.array([])
-        else:
+        elif os.path.exists(self.weights_path) and os.path.exists(self.losses_path):
             self.load()
+        else:
+            self.losses = np.array([])
 
         _ = self.to(device)
 
     def forward(self, x, t):
         """
-        x => Tensor of size (batch_size, traj_len*2)
+        x => Tensor of size (batch_size, channels, horizon)
         t => Integer representing the diffusion timestep of x
         """
-        
+
+        input_horizon = x.shape[2]
+
         # Get the time embedding from t:
         time_emb = self.time_embedding(t)
 
@@ -65,20 +72,29 @@ class TemporalUNet(nn.Module):
         # Up Sampling Layers:
         for i in range(len(self.up_samplers)):
             h_temp = h_list.pop()
-            # print(f"Shape of x: {x.shape}\t Shape of h_list: {h_temp.shape}")
-            x = self.up_samplers[i](x, h_temp, time_emb)   # How does pop work and not h_list[i]
-            if x.shape[2] == 8 or x.shape[2] == 14 or x.shape[2] == 26 or x.shape[2] == 8: # Upsampling doubles the dimensions of the input. So, we are manually cropping the extra size to match the size of it's corresponding h (context/residual from the downsampling layer)
-                x = tvtf.crop(x, 0, 0, x.shape[1], x.shape[2] - 1)
+            x = self.up_samplers[i](x, h_temp, time_emb)
+            target_horizon = h_list[-1].shape[2] if h_list else input_horizon
+            x = self._match_horizon(x, target_horizon)
 
         # Final Convolution
         out = self.final_conv(x)
 
         return out
 
+    @staticmethod
+    def _match_horizon(x, target_horizon):
+
+        horizon = x.shape[2]
+        if horizon == target_horizon:
+            return x
+        if horizon > target_horizon:
+            return x[:, :, :target_horizon]
+        return F.pad(x, (0, target_horizon - horizon))
+
     def save(self):
 
-        torch.save(self.state_dict(), self.model_name + "/weights_latest.pt")
-        np.save(self.model_name + "/losses.npy", self.losses)
+        torch.save(self.state_dict(), self.weights_path)
+        np.save(self.losses_path, self.losses)
 
     def save_checkpoint(self, checkpoint):
         
@@ -87,8 +103,8 @@ class TemporalUNet(nn.Module):
     
     def load(self):
 
-        self.losses = np.load(self.model_name + "/losses.npy")
-        self.load_state_dict(torch.load(self.model_name + "/weights_latest.pt"))
+        self.losses = np.load(self.losses_path)
+        self.load_state_dict(torch.load(self.weights_path))
         print("Loaded Model at " + str(self.losses.size) + " epochs")
 
     def load_checkpoint(self, checkpoint):

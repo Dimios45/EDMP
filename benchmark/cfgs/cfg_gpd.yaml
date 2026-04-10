@@ -1,0 +1,26 @@
+guide:
+  guides: [1, 2, 3, 4, 5, 10, 11, 13, 14, 16, 18, 21]
+  batch_size_per_guide: 10
+  guide_path: './guides/'
+dataset:
+  path: './datasets/'
+  dataset_type: 'hybrid'
+  scene_types: ['tabletop', 'cubby', 'merged_cubby', 'dresser']
+  num_scenes_per_type: -1
+  random_scenes: False
+  save_scene_indices: True
+model:
+  model_dir: './models/'
+  device: 'cuda:0'
+  T: 64                  # GPD uses 64 steps vs EDMP's 255
+  n_control: 8           # Bernstein control points (degree-7 polynomial)
+  traj_len: 50           # waypoints to reconstruct at inference
+  num_channels: 7
+  use_stitch: True       # enable the stitching algorithm
+general:
+  gui: True
+  save_dir: './results/'
+  wandb:
+    enable_wandb: False
+    run_num: 1
+    project_name: 'GPD'
