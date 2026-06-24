@@ -34,7 +34,8 @@ class PolynomialDiffusion(Diffusion):
                             start: np.ndarray = None,
                             goal:  np.ndarray = None,
                             condition: bool = True,
-                            benchmarking: bool = False) -> np.ndarray:
+                            benchmarking: bool = False,
+                            extra_candidate_steps: int = 0) -> np.ndarray:
         """
         GPU-native guided denoising in Bernstein control-point space.
 
@@ -69,6 +70,7 @@ class PolynomialDiffusion(Diffusion):
 
         model.train(False)
         period = 2
+        collected = []   # for GPDS: trajectories from the last few denoising steps
 
         for t in range(self.T, 0, -1):
             if benchmarking:
@@ -127,9 +129,17 @@ class PolynomialDiffusion(Diffusion):
                     alpha_t[:, :, 0]  = start_t
                     alpha_t[:, :, -1] = goal_t
 
+            # GPDS: collect candidate trajectories from the last few steps
+            if extra_candidate_steps > 0 and t <= extra_candidate_steps:
+                with torch.no_grad():
+                    collected.append((alpha_t @ B_gpu.T).cpu().numpy())
+
         # Expand final control points to waypoints
         with torch.no_grad():
             trajectories = (alpha_t @ B_gpu.T).cpu().numpy()  # (batch, 7, N)
+        if collected:
+            # (n_steps * batch, 7, N) — diverse candidate pool for stitching
+            return np.concatenate(collected, axis=0)
         return trajectories
 
     # ------------------------------------------------------------------

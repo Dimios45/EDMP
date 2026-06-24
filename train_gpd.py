@@ -40,6 +40,9 @@ def main():
                         help='Number of Bernstein control points')
     parser.add_argument('--epochs',     type=int, default=20000)
     parser.add_argument('--batch_size', type=int, default=2048)
+    parser.add_argument('--variance_thresh', type=float, default=0.02,
+                        help='Terminal beta for linear schedule (D1: 0.08 for T=64)')
+    parser.add_argument('--schedule',   default='linear', choices=['linear', 'cosine'])
     parser.add_argument('--lr',         type=float, default=1e-4)
     parser.add_argument('--wandb',      action='store_true')
     parser.add_argument('--no_wandb',   dest='wandb', action='store_false')
@@ -51,7 +54,10 @@ def main():
 
     # ---- Dataset ----
     dataset = BernsteinTrajectoryDataset(args.dataset,
-                                         n_diffusion_steps=args.T)
+                                         n_diffusion_steps=args.T,
+                                         variance_thresh=args.variance_thresh,
+                                         schedule=args.schedule)
+    print(f"Schedule: {args.schedule} | variance_thresh={args.variance_thresh}")
 
     # ---- Model ----
     # n_control = 8 is much smaller than traj_len = 50 so the UNet dims

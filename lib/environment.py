@@ -16,6 +16,7 @@ class RobotEnvironment:
 
     def __init__(self, gui = True, timestep = 1/480, manipulator = True, benchmarking = False):
 
+        self.gui = gui                                                          # store for real-time pacing (headless skips sleeps)
         self.client_id = bc.BulletClient(p.GUI if gui else p.DIRECT)            # Initialize the bullet client
         self.client_id.setAdditionalSearchPath(pybullet_data.getDataPath())     # Add pybullet's data package to path
         self.client_id.setTimeStep(timestep)                                    # Set simulation timestep
@@ -607,6 +608,32 @@ class RobotEnvironment:
                 self.num_collisions += 1
                 break
     
+    def configs_free(self, configs):
+        """
+        Faithful static collision check for a batch of configs (M,7).
+
+        Uses the SAME contact model as benchmark_trajectory (getContactPoints
+        between the Franka URDF and the spawned obstacle bodies). Obstacles must
+        already be spawned. Returns a (M,) bool mask: True = collision-free
+        (within joint limits AND no obstacle contact). Serial per config.
+        """
+        configs = np.asarray(configs, dtype=np.float64)
+        M = configs.shape[0]
+        free = np.ones(M, dtype=bool)
+        for m in range(M):
+            q = configs[m]
+            if np.any(q < self.joint_lower_limits) or np.any(q > self.joint_upper_limits):
+                free[m] = False
+                continue
+            for i, jind in enumerate(self.joints):
+                self.client_id.resetJointState(self.manipulator, jind, float(q[i]))
+            self.client_id.performCollisionDetection()
+            for obs_id in self.obs_ids:
+                if len(self.client_id.getContactPoints(self.manipulator, obs_id)) > 0:
+                    free[m] = False
+                    break
+        return free
+
     def execute_trajectory(self, trajectory):
 
         for i, joint_ind in enumerate(self.joints):
@@ -615,7 +642,8 @@ class RobotEnvironment:
         _ = input("Press Enter to execute trajectory")
 
         for i in range(1, trajectory.shape[-1]):
-            time.sleep(0.4)
+            if self.gui:
+                time.sleep(0.4)
             # current_joints = np.array([self.client_id.getJointState(self.manipulator, i)[0] for i in self.joints])
             target_joints = trajectory[:, i]
             # print(f"Current Joints: {current_joints}")
@@ -653,7 +681,8 @@ class RobotEnvironment:
         dt = [0]
 
         for i in range(1, trajectory.shape[-1]):
-            time.sleep(0.4)
+            if self.gui:
+                time.sleep(0.4)
             target_joints = trajectory[:, i]
 
             if any(target_joints <= self.joint_lower_limits) or any(target_joints >= self.joint_upper_limits):

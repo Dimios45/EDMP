@@ -1,0 +1,127 @@
+{
+  "method": "gpd",
+  "worker_id": 1,
+  "num_workers": 8,
+  "results": [
+    {
+      "scene_type": "tabletop",
+      "scene_num": 1,
+      "success": 1,
+      "plan_time": 19.06
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 9,
+      "success": 1,
+      "plan_time": 2.794
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 17,
+      "success": 1,
+      "plan_time": 5.887
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 25,
+      "success": 1,
+      "plan_time": 8.644
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 33,
+      "success": 1,
+      "plan_time": 7.867
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 41,
+      "success": 1,
+      "plan_time": 7.653
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 49,
+      "success": 1,
+      "plan_time": 10.743
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 1,
+      "success": 0,
+      "plan_time": 3.095
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 9,
+      "success": 0,
+      "plan_time": 5.497
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 17,
+      "success": 0,
+      "plan_time": 10.623
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 1,
+      "success": 0,
+      "plan_time": 12.971
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 9,
+      "success": 0,
+      "plan_time": 9.921
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 17,
+      "success": 0,
+      "plan_time": 14.163
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 1,
+      "success": 1,
+      "plan_time": 8.445
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 9,
+      "success": 1,
+      "plan_time": 14.144
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 17,
+      "success": 1,
+      "plan_time": 16.775
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 25,
+      "success": 0,
+      "plan_time": 13.321
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 33,
+      "success": 1,
+      "plan_time": 12.616
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 41,
+      "success": 1,
+      "plan_time": 10.073
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 49,
+      "success": 1,
+      "plan_time": 5.051
+    }
+  ]
+}

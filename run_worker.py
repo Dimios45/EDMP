@@ -52,6 +52,12 @@ GPD_TRAJ_LEN   = 50
 GPD_MODEL_DIR  = './models/'
 GPD_GUIDES     = [1, 2, 3, 4, 5, 10, 11, 13, 14, 16, 18, 21]
 GPD_BATCH_PER  = 10
+USE_STITCH     = True   # if False, select best single candidate (paper GPD-NG, no stitching)
+USE_RRT        = True   # when stitching: RRT-Connect bridges (True) or linear bridges (False)
+USE_PB_COLLISION = False  # stitch/RRT collision check: PyBullet (True) or AABB proxy (False)
+GPD_EXTRA_STEPS  = 0      # GPDS: collect candidates from the last N denoising steps (paper uses 5)
+GPD_GUIDANCE_SCALE = 1.0  # multiplier on the guidance schedule (test stronger/weaker guidance)
+GPD_VAR_THRESH = 0.02   # inference noise schedule terminal beta (must match training; D1: 0.08)
 
 GUIDE_PATH     = './guides/'
 T_ORIG         = 255
@@ -170,11 +176,13 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
     upper = np.array([ 166, 101, 166,  -4, 166,215, 166], np.float32) * (np.pi/180)
 
     diffuser   = PolynomialDiffusion(T=GPD_T, device=DEVICE,
-                                     n_control=GPD_N_CONTROL, traj_len=GPD_TRAJ_LEN)
+                                     n_control=GPD_N_CONTROL, traj_len=GPD_TRAJ_LEN,
+                                     variance_thresh=GPD_VAR_THRESH)
     model_name = GPD_MODEL_DIR + f'GPDModel{GPD_T}_N{GPD_N_CONTROL}'
     denoiser   = TemporalUNetGPD(model_name=model_name, input_dim=7, time_dim=32,
                                   dims=(32, 64, 128, 256), device=DEVICE)
     guide_cfgs = build_guide_cfgs(GPD_GUIDES, GPD_T, GPD_BATCH_PER)
+    guide_cfgs['guidance_schedule'] = guide_cfgs['guidance_schedule'] * GPD_GUIDANCE_SCALE
     total_bs   = guide_cfgs['total_batch_size']
 
     scene_results, t_success = [], 0
@@ -194,14 +202,22 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
                 model=denoiser, guide=guide, num_channels=7,
                 guidance_schedule=guide_cfgs['guidance_schedule'],
                 batch_size=total_bs, start=start_j, goal=goal_j,
-                condition=True, benchmarking=False)
-            plan_t = time.time() - t0
+                condition=True, benchmarking=False,
+                extra_candidate_steps=GPD_EXTRA_STEPS)
 
-            traj = stitch(trajs, guide, DEVICE)
-            traj = np.clip(traj, lower[:, None], upper[:, None])
-
+            # Spawn obstacles before stitch so a PyBullet collision checker (if
+            # used) sees them; harmless for the AABB/no-stitch paths.
             if n_cub > 0: env.spawn_collision_cuboids(cub_cfg)
             if n_cyl > 0: env.spawn_collision_cylinders(cyl_cfg)
+
+            if USE_STITCH:
+                cfn = env.configs_free if USE_PB_COLLISION else None
+                traj = stitch(trajs, guide, DEVICE, use_rrt=USE_RRT, collision_fn=cfn)
+            else:
+                traj = guide.choose_best_trajectory(start_j, goal_j, trajs)
+            traj = np.clip(traj, lower[:, None], upper[:, None])
+            plan_t = time.time() - t0
+
             success  = int(env.benchmark_trajectory(traj))
             t_success += success
 
@@ -227,18 +243,73 @@ def main():
     parser.add_argument('--num_workers', type=int, default=1)
     parser.add_argument('--full',        action='store_true',
                         help='Run all 1800 scenes (default: 50-scene mini)')
+    parser.add_argument('--per_type',    type=int, default=None,
+                        help='Balanced N scenes per type (capped at availability)')
+    parser.add_argument('--caps',        default=None,
+                        help='Explicit per-type caps "tabletop,cubby,merged_cubby,dresser" '
+                             '(natural distribution = 600,300,300,600)')
+    parser.add_argument('--guides',      default=None,
+                        help='Comma-separated guide ids for GPD (e.g. "1" for GPD-1G)')
+    parser.add_argument('--batch_per',   type=int, default=None,
+                        help='Candidates per guide (K = n_guides * batch_per)')
+    parser.add_argument('--no_stitch',   action='store_true',
+                        help='Disable stitching; pick best single candidate (paper GPD-NG)')
+    parser.add_argument('--linear_stitch', action='store_true',
+                        help='Use linear bridges instead of RRT-Connect when stitching')
+    parser.add_argument('--pybullet_collision', action='store_true',
+                        help='Use faithful PyBullet collision checking in stitch/RRT')
+    parser.add_argument('--extra_cand_steps', type=int, default=None,
+                        help='GPDS: collect candidates from last N denoising steps (paper=5)')
+    parser.add_argument('--dataset', default=None, choices=['global', 'hybrid', 'both'],
+                        help='Solvability test set (paper reports each separately)')
+    parser.add_argument('--guidance_scale', type=float, default=None,
+                        help='Multiplier on the guidance schedule (test stronger guidance)')
+    parser.add_argument('--model_dir',   default=None,
+                        help='Override model dir (e.g. ./models_d1/ for an ablation model)')
+    parser.add_argument('--variance_thresh', type=float, default=None,
+                        help='Inference noise schedule terminal beta (match training)')
     parser.add_argument('--out',         default=None)
     args = parser.parse_args()
 
     if args.out is None:
         args.out = f'results/{args.method}_w{args.worker_id}.json'
 
+    # ---- Apply GPD config overrides (module globals read by run_gpd_worker) ----
+    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE
+    if args.guides is not None:
+        GPD_GUIDES = [int(g) for g in args.guides.split(',')]
+    if args.batch_per is not None:
+        GPD_BATCH_PER = args.batch_per
+    if args.no_stitch:
+        USE_STITCH = False
+    if args.linear_stitch:
+        USE_RRT = False
+    if args.pybullet_collision:
+        USE_PB_COLLISION = True
+    if args.extra_cand_steps is not None:
+        GPD_EXTRA_STEPS = args.extra_cand_steps
+    if args.guidance_scale is not None:
+        GPD_GUIDANCE_SCALE = args.guidance_scale
+    if args.model_dir is not None:
+        GPD_MODEL_DIR = args.model_dir
+    if args.variance_thresh is not None:
+        GPD_VAR_THRESH = args.variance_thresh
+
     caps    = FULL_CAPS if args.full else MINI_CAPS
-    dataset = TestDataset(DATASET_TYPE, d_path=DATASET_PATH)
+    if args.per_type is not None:
+        caps = [min(args.per_type, c) for c in FULL_CAPS]
+    if args.caps is not None:
+        caps = [int(c) for c in args.caps.split(',')]
+    dataset_type = args.dataset if args.dataset is not None else DATASET_TYPE
+    dataset = TestDataset(dataset_type, d_path=DATASET_PATH)
     env     = RobotEnvironment(gui=GUI)
 
     print(f"Worker {args.worker_id}/{args.num_workers} | method={args.method} | "
           f"full={args.full} | out={args.out}")
+    if args.method == 'gpd':
+        print(f"  GPD config | guides={GPD_GUIDES} | batch_per={GPD_BATCH_PER} | "
+              f"K={len(GPD_GUIDES)*GPD_BATCH_PER} | stitch={USE_STITCH} | "
+              f"rrt={USE_RRT} | model_dir={GPD_MODEL_DIR} | caps={caps}")
 
     if args.method == 'edmp':
         run_edmp_worker(dataset, env, caps, args.worker_id, args.num_workers, args.out)
