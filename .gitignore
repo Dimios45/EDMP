@@ -16,3 +16,12 @@ models_20k/
 models_d1/
 _dl_logs/
 data/
+models_long/
+logs/
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.blg
+paper/*.out
+results/*/gpd_w*.json
+results/*/edmp_w*.json

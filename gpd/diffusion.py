@@ -35,7 +35,11 @@ class PolynomialDiffusion(Diffusion):
                             goal:  np.ndarray = None,
                             condition: bool = True,
                             benchmarking: bool = False,
-                            extra_candidate_steps: int = 0) -> np.ndarray:
+                            extra_candidate_steps: int = 0,
+                            smoothness_weight: float = 0.0,
+                            scene_obs: np.ndarray = None,
+                            scene_mask: np.ndarray = None,
+                            cfg_weight: float = 1.0) -> np.ndarray:
         """
         GPU-native guided denoising in Bernstein control-point space.
 
@@ -53,6 +57,19 @@ class PolynomialDiffusion(Diffusion):
         beta_gpu      = torch.tensor(self.beta,      dtype=torch.float32, device=dev)
         B_gpu         = torch.tensor(self.bern.B,    dtype=torch.float32, device=dev)  # (N, M)
         gs_gpu        = torch.tensor(guidance_schedule, dtype=torch.float32, device=dev)  # (B, T)
+
+        # Second-difference (curvature) operator on control points, for the
+        # smoothness-constrained representation experiment. L: (M-2, M) with
+        # [1,-2,1] stencil; penalty = ||L alpha||^2 -> grad = 2 (L^T L) alpha.
+        # Re-imposes the low-degree smoothness prior that a larger n_control
+        # otherwise discards (tests the "compression is a regularizer" thesis).
+        LtL_gpu = None
+        if smoothness_weight > 0.0 and self.n_control >= 3:
+            M = self.n_control
+            L = np.zeros((M - 2, M), dtype=np.float32)
+            for i in range(M - 2):
+                L[i, i:i + 3] = [1.0, -2.0, 1.0]
+            LtL_gpu = torch.tensor(2.0 * (L.T @ L), dtype=torch.float32, device=dev)  # (M, M)
 
         start_t = torch.tensor(start, dtype=torch.float32, device=dev)  # (7,)
         goal_t  = torch.tensor(goal,  dtype=torch.float32, device=dev)  # (7,)
@@ -72,14 +89,31 @@ class PolynomialDiffusion(Diffusion):
         period = 2
         collected = []   # for GPDS: trajectories from the last few denoising steps
 
+        # ----- Scene conditioning (D3): precompute scene embedding once -----
+        cond_emb = None
+        if scene_obs is not None:
+            with torch.no_grad():
+                o = torch.tensor(scene_obs, dtype=torch.float32, device=dev)
+                m = torch.tensor(scene_mask, dtype=torch.bool, device=dev)
+                if o.dim() == 2:                       # (S,F) -> (1,S,F)
+                    o = o.unsqueeze(0); m = m.unsqueeze(0)
+                emb = model.scene_embed(o, m)          # (1, time_dim)
+                cond_emb = emb.expand(batch_size, -1).contiguous()
+
         for t in range(self.T, 0, -1):
             if benchmarking:
                 print(f"\rDenoising: {t} ", end="")
 
             # ----- Model forward — fully on GPU, no numpy -----
             with torch.no_grad():
-                t_in = torch.tensor([float(t)], dtype=torch.float32, device=dev)
-                eps  = model(alpha_t, t_in)           # (batch, 7, M) on GPU
+                t_in = torch.full((batch_size,), float(t), dtype=torch.float32, device=dev)
+                if cond_emb is None:
+                    eps = model(alpha_t, t_in)         # unconditional model
+                else:
+                    # Classifier-free guidance: eps_u + w (eps_c - eps_u)
+                    eps_c = model(alpha_t, t_in, scene_emb=cond_emb)
+                    eps_u = model(alpha_t, t_in)       # null embedding path
+                    eps = eps_u + cfg_weight * (eps_c - eps_u)
                 eps  = torch.nan_to_num(eps, nan=0.0, posinf=0.0, neginf=0.0)
                 # Clip eps to prevent gradient explosions
                 eps  = torch.clamp(eps, -5.0, 5.0)
@@ -122,6 +156,14 @@ class PolynomialDiffusion(Diffusion):
                     grad_alpha[:, :, -1] = 0.0
                     scale = gs_gpu[:, t - 1].view(batch_size, 1, 1)
                     alpha_t -= scale * grad_alpha
+
+            # ----- Smoothness (curvature) regularization on control points -----
+            if LtL_gpu is not None:
+                with torch.no_grad():
+                    grad_smooth = alpha_t @ LtL_gpu              # (batch, 7, M)
+                    grad_smooth[:, :, 0]  = 0.0                  # don't move pinned
+                    grad_smooth[:, :, -1] = 0.0                  # start/goal points
+                    alpha_t -= smoothness_weight * grad_smooth
 
             # Re-pin boundary conditions (also guards against numerical drift)
             with torch.no_grad():

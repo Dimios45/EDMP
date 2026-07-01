@@ -1,0 +1,60 @@
+{
+  "long_gpd": {
+    "n": 400,
+    "SR": 74.2,
+    "avg_time": 7.28,
+    "per_type": {
+      "tabletop": [
+        99,
+        100
+      ],
+      "cubby": [
+        72,
+        100
+      ],
+      "merged_cubby": [
+        56,
+        100
+      ],
+      "dresser": [
+        70,
+        100
+      ]
+    }
+  },
+  "long_d6": {
+    "n": 400,
+    "SR": 82.2,
+    "avg_time": 8.93,
+    "per_type": {
+      "tabletop": [
+        99,
+        100
+      ],
+      "cubby": [
+        88,
+        100
+      ],
+      "merged_cubby": [
+        72,
+        100
+      ],
+      "dresser": [
+        70,
+        100
+      ]
+    }
+  },
+  "_meta": {
+    "prior": "GPDModel64_N8 @ 1,000,000 steps (models_long/)",
+    "baseline_200k": {
+      "plain_gpd": 72.8,
+      "gpd_d6": 83.0,
+      "eps_min": 0.4632
+    },
+    "long_1M": {
+      "eps_min": 0.4434,
+      "eps_mean_last500": 0.4636
+    }
+  }
+}

@@ -1,0 +1,2404 @@
+{
+  "gpd": [
+    {
+      "scene_type": "tabletop",
+      "scene_num": 0,
+      "success": 1,
+      "plan_time": 8.716
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 1,
+      "success": 1,
+      "plan_time": 8.723
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 2,
+      "success": 1,
+      "plan_time": 8.644
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 3,
+      "success": 1,
+      "plan_time": 8.726
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 4,
+      "success": 1,
+      "plan_time": 8.724
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 5,
+      "success": 1,
+      "plan_time": 8.736
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 6,
+      "success": 1,
+      "plan_time": 8.677
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 7,
+      "success": 1,
+      "plan_time": 8.761
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 8,
+      "success": 1,
+      "plan_time": 7.33
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 9,
+      "success": 1,
+      "plan_time": 7.394
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 10,
+      "success": 1,
+      "plan_time": 7.249
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 11,
+      "success": 1,
+      "plan_time": 7.369
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 12,
+      "success": 1,
+      "plan_time": 7.36
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 13,
+      "success": 1,
+      "plan_time": 7.413
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 14,
+      "success": 1,
+      "plan_time": 7.128
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 15,
+      "success": 1,
+      "plan_time": 7.417
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 16,
+      "success": 1,
+      "plan_time": 7.358
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 17,
+      "success": 1,
+      "plan_time": 7.313
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 18,
+      "success": 1,
+      "plan_time": 6.936
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 19,
+      "success": 1,
+      "plan_time": 7.333
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 20,
+      "success": 1,
+      "plan_time": 7.323
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 21,
+      "success": 1,
+      "plan_time": 7.303
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 22,
+      "success": 1,
+      "plan_time": 6.855
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 23,
+      "success": 1,
+      "plan_time": 7.372
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 24,
+      "success": 1,
+      "plan_time": 7.536
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 25,
+      "success": 1,
+      "plan_time": 7.481
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 26,
+      "success": 1,
+      "plan_time": 7.147
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 27,
+      "success": 1,
+      "plan_time": 7.482
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 28,
+      "success": 1,
+      "plan_time": 7.52
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 29,
+      "success": 1,
+      "plan_time": 7.563
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 30,
+      "success": 1,
+      "plan_time": 7.161
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 31,
+      "success": 1,
+      "plan_time": 7.517
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 32,
+      "success": 1,
+      "plan_time": 7.38
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 33,
+      "success": 1,
+      "plan_time": 7.263
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 34,
+      "success": 1,
+      "plan_time": 7.143
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 35,
+      "success": 1,
+      "plan_time": 7.397
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 36,
+      "success": 1,
+      "plan_time": 7.426
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 37,
+      "success": 1,
+      "plan_time": 7.447
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 38,
+      "success": 1,
+      "plan_time": 7.158
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 39,
+      "success": 1,
+      "plan_time": 7.391
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 40,
+      "success": 1,
+      "plan_time": 7.449
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 41,
+      "success": 1,
+      "plan_time": 7.068
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 42,
+      "success": 1,
+      "plan_time": 7.201
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 43,
+      "success": 1,
+      "plan_time": 7.301
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 44,
+      "success": 1,
+      "plan_time": 7.327
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 45,
+      "success": 1,
+      "plan_time": 7.426
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 46,
+      "success": 1,
+      "plan_time": 7.187
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 47,
+      "success": 1,
+      "plan_time": 7.274
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 48,
+      "success": 1,
+      "plan_time": 7.398
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 49,
+      "success": 1,
+      "plan_time": 7.273
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 50,
+      "success": 1,
+      "plan_time": 7.18
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 51,
+      "success": 1,
+      "plan_time": 7.301
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 52,
+      "success": 1,
+      "plan_time": 7.274
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 53,
+      "success": 1,
+      "plan_time": 7.333
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 54,
+      "success": 1,
+      "plan_time": 7.256
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 55,
+      "success": 1,
+      "plan_time": 7.328
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 56,
+      "success": 1,
+      "plan_time": 7.436
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 57,
+      "success": 1,
+      "plan_time": 7.236
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 58,
+      "success": 1,
+      "plan_time": 7.362
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 59,
+      "success": 1,
+      "plan_time": 7.46
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 60,
+      "success": 1,
+      "plan_time": 7.381
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 61,
+      "success": 1,
+      "plan_time": 7.382
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 62,
+      "success": 1,
+      "plan_time": 7.357
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 63,
+      "success": 1,
+      "plan_time": 7.389
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 64,
+      "success": 1,
+      "plan_time": 7.294
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 65,
+      "success": 1,
+      "plan_time": 7.195
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 66,
+      "success": 1,
+      "plan_time": 7.194
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 67,
+      "success": 1,
+      "plan_time": 7.269
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 68,
+      "success": 1,
+      "plan_time": 7.206
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 69,
+      "success": 1,
+      "plan_time": 7.316
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 70,
+      "success": 1,
+      "plan_time": 7.159
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 71,
+      "success": 1,
+      "plan_time": 7.289
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 72,
+      "success": 1,
+      "plan_time": 7.458
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 73,
+      "success": 1,
+      "plan_time": 7.281
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 74,
+      "success": 1,
+      "plan_time": 7.384
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 75,
+      "success": 1,
+      "plan_time": 7.365
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 76,
+      "success": 1,
+      "plan_time": 7.357
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 77,
+      "success": 1,
+      "plan_time": 7.432
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 78,
+      "success": 1,
+      "plan_time": 7.279
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 79,
+      "success": 1,
+      "plan_time": 7.351
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 80,
+      "success": 1,
+      "plan_time": 7.479
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 81,
+      "success": 1,
+      "plan_time": 7.511
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 82,
+      "success": 1,
+      "plan_time": 7.417
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 83,
+      "success": 1,
+      "plan_time": 7.494
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 84,
+      "success": 1,
+      "plan_time": 7.415
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 85,
+      "success": 1,
+      "plan_time": 7.424
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 86,
+      "success": 1,
+      "plan_time": 7.465
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 87,
+      "success": 1,
+      "plan_time": 7.459
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 88,
+      "success": 1,
+      "plan_time": 7.154
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 89,
+      "success": 1,
+      "plan_time": 7.133
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 90,
+      "success": 1,
+      "plan_time": 7.181
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 91,
+      "success": 1,
+      "plan_time": 7.187
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 92,
+      "success": 0,
+      "plan_time": 20.081
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 93,
+      "success": 1,
+      "plan_time": 7.127
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 94,
+      "success": 1,
+      "plan_time": 7.202
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 95,
+      "success": 1,
+      "plan_time": 7.214
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 96,
+      "success": 1,
+      "plan_time": 7.017
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 97,
+      "success": 1,
+      "plan_time": 7.008
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 98,
+      "success": 1,
+      "plan_time": 7.023
+    },
+    {
+      "scene_type": "tabletop",
+      "scene_num": 99,
+      "success": 1,
+      "plan_time": 6.985
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 0,
+      "success": 1,
+      "plan_time": 7.95
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 1,
+      "success": 1,
+      "plan_time": 6.578
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 2,
+      "success": 1,
+      "plan_time": 6.834
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 3,
+      "success": 1,
+      "plan_time": 6.661
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 4,
+      "success": 0,
+      "plan_time": 19.736
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 5,
+      "success": 1,
+      "plan_time": 9.176
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 6,
+      "success": 1,
+      "plan_time": 7.045
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 7,
+      "success": 1,
+      "plan_time": 7.02
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 8,
+      "success": 1,
+      "plan_time": 6.73
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 9,
+      "success": 1,
+      "plan_time": 6.791
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 10,
+      "success": 1,
+      "plan_time": 6.839
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 11,
+      "success": 1,
+      "plan_time": 6.72
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 12,
+      "success": 1,
+      "plan_time": 6.647
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 13,
+      "success": 1,
+      "plan_time": 6.82
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 14,
+      "success": 1,
+      "plan_time": 6.708
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 15,
+      "success": 1,
+      "plan_time": 6.762
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 16,
+      "success": 1,
+      "plan_time": 6.684
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 17,
+      "success": 1,
+      "plan_time": 6.727
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 18,
+      "success": 1,
+      "plan_time": 6.724
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 19,
+      "success": 1,
+      "plan_time": 7.844
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 20,
+      "success": 1,
+      "plan_time": 18.105
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 21,
+      "success": 1,
+      "plan_time": 6.669
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 22,
+      "success": 1,
+      "plan_time": 9.821
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 23,
+      "success": 1,
+      "plan_time": 6.758
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 24,
+      "success": 1,
+      "plan_time": 6.961
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 25,
+      "success": 1,
+      "plan_time": 6.658
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 26,
+      "success": 0,
+      "plan_time": 19.482
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 27,
+      "success": 1,
+      "plan_time": 6.73
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 28,
+      "success": 1,
+      "plan_time": 6.636
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 29,
+      "success": 1,
+      "plan_time": 7.713
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 30,
+      "success": 1,
+      "plan_time": 6.727
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 31,
+      "success": 1,
+      "plan_time": 8.838
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 32,
+      "success": 1,
+      "plan_time": 6.829
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 33,
+      "success": 1,
+      "plan_time": 6.722
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 34,
+      "success": 1,
+      "plan_time": 6.6
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 35,
+      "success": 1,
+      "plan_time": 6.792
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 36,
+      "success": 1,
+      "plan_time": 6.586
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 37,
+      "success": 1,
+      "plan_time": 6.69
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 38,
+      "success": 1,
+      "plan_time": 6.766
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 39,
+      "success": 1,
+      "plan_time": 6.665
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 40,
+      "success": 1,
+      "plan_time": 7.764
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 41,
+      "success": 1,
+      "plan_time": 6.637
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 42,
+      "success": 0,
+      "plan_time": 19.282
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 43,
+      "success": 1,
+      "plan_time": 6.68
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 44,
+      "success": 1,
+      "plan_time": 6.615
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 45,
+      "success": 1,
+      "plan_time": 6.669
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 46,
+      "success": 0,
+      "plan_time": 6.798
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 47,
+      "success": 0,
+      "plan_time": 19.26
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 48,
+      "success": 1,
+      "plan_time": 6.744
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 49,
+      "success": 0,
+      "plan_time": 6.854
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 50,
+      "success": 1,
+      "plan_time": 6.648
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 51,
+      "success": 1,
+      "plan_time": 10.768
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 52,
+      "success": 1,
+      "plan_time": 6.737
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 53,
+      "success": 1,
+      "plan_time": 6.629
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 54,
+      "success": 1,
+      "plan_time": 6.641
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 55,
+      "success": 1,
+      "plan_time": 9.772
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 56,
+      "success": 1,
+      "plan_time": 9.997
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 57,
+      "success": 1,
+      "plan_time": 6.583
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 58,
+      "success": 1,
+      "plan_time": 6.82
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 59,
+      "success": 1,
+      "plan_time": 6.667
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 60,
+      "success": 1,
+      "plan_time": 6.656
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 61,
+      "success": 1,
+      "plan_time": 6.571
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 62,
+      "success": 1,
+      "plan_time": 6.622
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 63,
+      "success": 1,
+      "plan_time": 10.981
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 64,
+      "success": 1,
+      "plan_time": 6.598
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 65,
+      "success": 0,
+      "plan_time": 19.101
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 66,
+      "success": 1,
+      "plan_time": 6.634
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 67,
+      "success": 1,
+      "plan_time": 6.607
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 68,
+      "success": 1,
+      "plan_time": 6.624
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 69,
+      "success": 1,
+      "plan_time": 6.709
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 70,
+      "success": 1,
+      "plan_time": 6.748
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 71,
+      "success": 0,
+      "plan_time": 19.455
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 72,
+      "success": 0,
+      "plan_time": 6.691
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 73,
+      "success": 0,
+      "plan_time": 19.35
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 74,
+      "success": 0,
+      "plan_time": 6.67
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 75,
+      "success": 1,
+      "plan_time": 7.731
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 76,
+      "success": 1,
+      "plan_time": 6.635
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 77,
+      "success": 1,
+      "plan_time": 6.566
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 78,
+      "success": 1,
+      "plan_time": 6.598
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 79,
+      "success": 0,
+      "plan_time": 18.406
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 80,
+      "success": 1,
+      "plan_time": 6.765
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 81,
+      "success": 1,
+      "plan_time": 6.735
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 82,
+      "success": 0,
+      "plan_time": 19.088
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 83,
+      "success": 1,
+      "plan_time": 7.734
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 84,
+      "success": 1,
+      "plan_time": 6.542
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 85,
+      "success": 1,
+      "plan_time": 6.664
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 86,
+      "success": 1,
+      "plan_time": 6.626
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 87,
+      "success": 0,
+      "plan_time": 16.89
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 88,
+      "success": 1,
+      "plan_time": 6.652
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 89,
+      "success": 1,
+      "plan_time": 6.529
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 90,
+      "success": 1,
+      "plan_time": 6.682
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 91,
+      "success": 1,
+      "plan_time": 6.662
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 92,
+      "success": 1,
+      "plan_time": 6.645
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 93,
+      "success": 1,
+      "plan_time": 6.875
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 94,
+      "success": 1,
+      "plan_time": 6.675
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 95,
+      "success": 1,
+      "plan_time": 14.644
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 96,
+      "success": 1,
+      "plan_time": 6.573
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 97,
+      "success": 1,
+      "plan_time": 6.591
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 98,
+      "success": 0,
+      "plan_time": 6.513
+    },
+    {
+      "scene_type": "cubby",
+      "scene_num": 99,
+      "success": 0,
+      "plan_time": 6.608
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 0,
+      "success": 1,
+      "plan_time": 6.638
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 1,
+      "success": 0,
+      "plan_time": 18.786
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 2,
+      "success": 1,
+      "plan_time": 6.478
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 3,
+      "success": 1,
+      "plan_time": 6.556
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 4,
+      "success": 1,
+      "plan_time": 6.775
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 5,
+      "success": 1,
+      "plan_time": 6.668
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 6,
+      "success": 1,
+      "plan_time": 6.644
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 7,
+      "success": 0,
+      "plan_time": 18.278
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 8,
+      "success": 0,
+      "plan_time": 18.947
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 9,
+      "success": 0,
+      "plan_time": 18.219
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 10,
+      "success": 1,
+      "plan_time": 6.483
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 11,
+      "success": 1,
+      "plan_time": 6.78
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 12,
+      "success": 0,
+      "plan_time": 18.449
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 13,
+      "success": 0,
+      "plan_time": 7.876
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 14,
+      "success": 0,
+      "plan_time": 19.081
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 15,
+      "success": 0,
+      "plan_time": 18.888
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 16,
+      "success": 0,
+      "plan_time": 18.796
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 17,
+      "success": 0,
+      "plan_time": 18.398
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 18,
+      "success": 0,
+      "plan_time": 18.457
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 19,
+      "success": 1,
+      "plan_time": 6.759
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 20,
+      "success": 0,
+      "plan_time": 18.413
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 21,
+      "success": 1,
+      "plan_time": 6.684
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 22,
+      "success": 1,
+      "plan_time": 6.626
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 23,
+      "success": 1,
+      "plan_time": 6.575
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 24,
+      "success": 0,
+      "plan_time": 18.12
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 25,
+      "success": 1,
+      "plan_time": 6.672
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 26,
+      "success": 1,
+      "plan_time": 6.487
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 27,
+      "success": 0,
+      "plan_time": 18.588
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 28,
+      "success": 1,
+      "plan_time": 7.616
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 29,
+      "success": 1,
+      "plan_time": 6.632
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 30,
+      "success": 0,
+      "plan_time": 18.842
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 31,
+      "success": 1,
+      "plan_time": 6.953
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 32,
+      "success": 1,
+      "plan_time": 6.532
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 33,
+      "success": 1,
+      "plan_time": 6.588
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 34,
+      "success": 1,
+      "plan_time": 17.999
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 35,
+      "success": 1,
+      "plan_time": 6.56
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 36,
+      "success": 1,
+      "plan_time": 6.569
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 37,
+      "success": 1,
+      "plan_time": 6.607
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 38,
+      "success": 1,
+      "plan_time": 6.425
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 39,
+      "success": 0,
+      "plan_time": 19.265
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 40,
+      "success": 1,
+      "plan_time": 6.565
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 41,
+      "success": 0,
+      "plan_time": 19.631
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 42,
+      "success": 1,
+      "plan_time": 10.165
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 43,
+      "success": 1,
+      "plan_time": 6.253
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 44,
+      "success": 1,
+      "plan_time": 6.564
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 45,
+      "success": 1,
+      "plan_time": 6.508
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 46,
+      "success": 0,
+      "plan_time": 18.377
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 47,
+      "success": 1,
+      "plan_time": 6.418
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 48,
+      "success": 1,
+      "plan_time": 6.795
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 49,
+      "success": 1,
+      "plan_time": 6.544
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 50,
+      "success": 1,
+      "plan_time": 7.979
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 51,
+      "success": 0,
+      "plan_time": 18.334
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 52,
+      "success": 1,
+      "plan_time": 6.626
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 53,
+      "success": 1,
+      "plan_time": 6.418
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 54,
+      "success": 1,
+      "plan_time": 6.448
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 55,
+      "success": 1,
+      "plan_time": 6.862
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 56,
+      "success": 0,
+      "plan_time": 7.817
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 57,
+      "success": 1,
+      "plan_time": 6.363
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 58,
+      "success": 0,
+      "plan_time": 18.663
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 59,
+      "success": 1,
+      "plan_time": 6.609
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 60,
+      "success": 1,
+      "plan_time": 7.022
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 61,
+      "success": 1,
+      "plan_time": 6.407
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 62,
+      "success": 1,
+      "plan_time": 6.44
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 63,
+      "success": 1,
+      "plan_time": 6.7
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 64,
+      "success": 1,
+      "plan_time": 6.799
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 65,
+      "success": 0,
+      "plan_time": 19.39
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 66,
+      "success": 1,
+      "plan_time": 6.905
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 67,
+      "success": 0,
+      "plan_time": 19.847
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 68,
+      "success": 0,
+      "plan_time": 19.086
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 69,
+      "success": 0,
+      "plan_time": 18.388
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 70,
+      "success": 1,
+      "plan_time": 6.633
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 71,
+      "success": 0,
+      "plan_time": 19.769
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 72,
+      "success": 1,
+      "plan_time": 6.886
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 73,
+      "success": 0,
+      "plan_time": 12.348
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 74,
+      "success": 0,
+      "plan_time": 19.928
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 75,
+      "success": 1,
+      "plan_time": 7.1
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 76,
+      "success": 1,
+      "plan_time": 6.48
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 77,
+      "success": 0,
+      "plan_time": 18.595
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 78,
+      "success": 1,
+      "plan_time": 7.576
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 79,
+      "success": 1,
+      "plan_time": 7.434
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 80,
+      "success": 0,
+      "plan_time": 19.39
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 81,
+      "success": 0,
+      "plan_time": 21.43
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 82,
+      "success": 1,
+      "plan_time": 6.807
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 83,
+      "success": 1,
+      "plan_time": 6.732
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 84,
+      "success": 1,
+      "plan_time": 6.811
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 85,
+      "success": 1,
+      "plan_time": 6.608
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 86,
+      "success": 1,
+      "plan_time": 6.837
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 87,
+      "success": 1,
+      "plan_time": 8.772
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 88,
+      "success": 1,
+      "plan_time": 6.623
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 89,
+      "success": 1,
+      "plan_time": 7.286
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 90,
+      "success": 1,
+      "plan_time": 7.698
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 91,
+      "success": 0,
+      "plan_time": 18.843
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 92,
+      "success": 1,
+      "plan_time": 8.774
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 93,
+      "success": 1,
+      "plan_time": 6.622
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 94,
+      "success": 1,
+      "plan_time": 7.893
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 95,
+      "success": 1,
+      "plan_time": 7.576
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 96,
+      "success": 1,
+      "plan_time": 6.808
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 97,
+      "success": 0,
+      "plan_time": 19.759
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 98,
+      "success": 0,
+      "plan_time": 7.635
+    },
+    {
+      "scene_type": "merged_cubby",
+      "scene_num": 99,
+      "success": 0,
+      "plan_time": 20.033
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 0,
+      "success": 0,
+      "plan_time": 20.319
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 1,
+      "success": 1,
+      "plan_time": 6.855
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 2,
+      "success": 0,
+      "plan_time": 7.573
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 3,
+      "success": 1,
+      "plan_time": 7.079
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 4,
+      "success": 0,
+      "plan_time": 20.449
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 5,
+      "success": 1,
+      "plan_time": 7.122
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 6,
+      "success": 0,
+      "plan_time": 19.223
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 7,
+      "success": 1,
+      "plan_time": 7.357
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 8,
+      "success": 1,
+      "plan_time": 7.877
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 9,
+      "success": 1,
+      "plan_time": 6.996
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 10,
+      "success": 1,
+      "plan_time": 7.452
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 11,
+      "success": 1,
+      "plan_time": 7.819
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 12,
+      "success": 1,
+      "plan_time": 7.813
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 13,
+      "success": 1,
+      "plan_time": 7.241
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 14,
+      "success": 0,
+      "plan_time": 19.639
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 15,
+      "success": 0,
+      "plan_time": 19.653
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 16,
+      "success": 1,
+      "plan_time": 12.345
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 17,
+      "success": 1,
+      "plan_time": 7.121
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 18,
+      "success": 1,
+      "plan_time": 7.079
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 19,
+      "success": 0,
+      "plan_time": 21.714
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 20,
+      "success": 1,
+      "plan_time": 7.603
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 21,
+      "success": 0,
+      "plan_time": 18.887
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 22,
+      "success": 1,
+      "plan_time": 13.648
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 23,
+      "success": 0,
+      "plan_time": 20.722
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 24,
+      "success": 0,
+      "plan_time": 7.409
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 25,
+      "success": 0,
+      "plan_time": 17.482
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 26,
+      "success": 1,
+      "plan_time": 6.641
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 27,
+      "success": 0,
+      "plan_time": 19.646
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 28,
+      "success": 0,
+      "plan_time": 20.883
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 29,
+      "success": 1,
+      "plan_time": 7.062
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 30,
+      "success": 1,
+      "plan_time": 7.506
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 31,
+      "success": 0,
+      "plan_time": 17.989
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 32,
+      "success": 1,
+      "plan_time": 7.268
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 33,
+      "success": 1,
+      "plan_time": 7.189
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 34,
+      "success": 1,
+      "plan_time": 7.174
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 35,
+      "success": 1,
+      "plan_time": 6.998
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 36,
+      "success": 1,
+      "plan_time": 6.648
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 37,
+      "success": 0,
+      "plan_time": 6.91
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 38,
+      "success": 0,
+      "plan_time": 8.867
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 39,
+      "success": 1,
+      "plan_time": 6.763
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 40,
+      "success": 0,
+      "plan_time": 9.726
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 41,
+      "success": 1,
+      "plan_time": 6.643
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 42,
+      "success": 1,
+      "plan_time": 7.219
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 43,
+      "success": 1,
+      "plan_time": 7.082
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 44,
+      "success": 1,
+      "plan_time": 6.791
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 45,
+      "success": 1,
+      "plan_time": 7.679
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 46,
+      "success": 0,
+      "plan_time": 21.798
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 47,
+      "success": 1,
+      "plan_time": 6.703
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 48,
+      "success": 1,
+      "plan_time": 6.698
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 49,
+      "success": 1,
+      "plan_time": 6.626
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 50,
+      "success": 0,
+      "plan_time": 18.69
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 51,
+      "success": 0,
+      "plan_time": 17.276
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 52,
+      "success": 1,
+      "plan_time": 6.82
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 53,
+      "success": 1,
+      "plan_time": 6.443
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 54,
+      "success": 1,
+      "plan_time": 6.703
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 55,
+      "success": 1,
+      "plan_time": 7.238
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 56,
+      "success": 1,
+      "plan_time": 7.265
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 57,
+      "success": 1,
+      "plan_time": 6.898
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 58,
+      "success": 1,
+      "plan_time": 6.498
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 59,
+      "success": 1,
+      "plan_time": 7.301
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 60,
+      "success": 1,
+      "plan_time": 7.074
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 61,
+      "success": 1,
+      "plan_time": 7.149
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 62,
+      "success": 1,
+      "plan_time": 13.109
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 63,
+      "success": 1,
+      "plan_time": 5.903
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 64,
+      "success": 1,
+      "plan_time": 6.999
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 65,
+      "success": 1,
+      "plan_time": 5.816
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 66,
+      "success": 0,
+      "plan_time": 19.903
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 67,
+      "success": 1,
+      "plan_time": 6.702
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 68,
+      "success": 0,
+      "plan_time": 17.458
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 69,
+      "success": 1,
+      "plan_time": 7.915
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 70,
+      "success": 1,
+      "plan_time": 9.284
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 71,
+      "success": 1,
+      "plan_time": 5.058
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 72,
+      "success": 0,
+      "plan_time": 17.809
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 73,
+      "success": 1,
+      "plan_time": 5.174
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 74,
+      "success": 0,
+      "plan_time": 16.028
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 75,
+      "success": 1,
+      "plan_time": 6.608
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 76,
+      "success": 0,
+      "plan_time": 19.813
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 77,
+      "success": 1,
+      "plan_time": 7.858
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 78,
+      "success": 0,
+      "plan_time": 17.671
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 79,
+      "success": 1,
+      "plan_time": 4.214
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 80,
+      "success": 1,
+      "plan_time": 7.176
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 81,
+      "success": 1,
+      "plan_time": 4.082
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 82,
+      "success": 1,
+      "plan_time": 3.54
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 83,
+      "success": 1,
+      "plan_time": 6.578
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 84,
+      "success": 1,
+      "plan_time": 6.885
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 85,
+      "success": 1,
+      "plan_time": 7.194
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 86,
+      "success": 0,
+      "plan_time": 19.825
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 87,
+      "success": 1,
+      "plan_time": 3.128
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 88,
+      "success": 1,
+      "plan_time": 18.598
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 89,
+      "success": 1,
+      "plan_time": 3.009
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 90,
+      "success": 0,
+      "plan_time": 6.607
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 91,
+      "success": 1,
+      "plan_time": 5.679
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 92,
+      "success": 0,
+      "plan_time": 15.097
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 93,
+      "success": 1,
+      "plan_time": 7.328
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 94,
+      "success": 1,
+      "plan_time": 7.851
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 95,
+      "success": 1,
+      "plan_time": 2.897
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 96,
+      "success": 1,
+      "plan_time": 5.573
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 97,
+      "success": 1,
+      "plan_time": 2.779
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 98,
+      "success": 1,
+      "plan_time": 1.118
+    },
+    {
+      "scene_type": "dresser",
+      "scene_num": 99,
+      "success": 1,
+      "plan_time": 4.945
+    }
+  ]
+}

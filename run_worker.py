@@ -26,7 +26,10 @@ from diffusion import *
 from datasets.load_test_dataset import TestDataset
 from diffusion.models.temporalunet import TemporalUNet as TemporalUNetGPD
 from gpd.diffusion import PolynomialDiffusion
+from gpd.conditional_unet import ConditionalTemporalUNet
 from gpd.stitch    import stitch
+from gpd.refine    import trajopt_refine
+from gpd.sphere_collision import SphereSDFCost
 from gpd.edmp_gpu  import denoise_guided_gpu
 
 # ── Static config ──────────────────────────────────────────────────────────────
@@ -57,6 +60,16 @@ USE_RRT        = True   # when stitching: RRT-Connect bridges (True) or linear b
 USE_PB_COLLISION = False  # stitch/RRT collision check: PyBullet (True) or AABB proxy (False)
 GPD_EXTRA_STEPS  = 0      # GPDS: collect candidates from the last N denoising steps (paper uses 5)
 GPD_GUIDANCE_SCALE = 1.0  # multiplier on the guidance schedule (test stronger/weaker guidance)
+GPD_SMOOTHNESS = 0.0      # D4-smooth: control-point curvature penalty per denoising step
+GPD_CONDITIONAL = False   # D3: use the scene-conditioned denoiser (CFG)
+GPD_CFG_WEIGHT  = 2.0     # D3: classifier-free guidance weight
+USE_TRAJOPT     = False   # D6: post-hoc trajectory-optimization feasibility repair
+TRAJOPT_ITERS   = 60
+TRAJOPT_DENSIFY = 3       # D7: output densification factor (overshoot-free execution)
+TRAJOPT_MID_W   = 1.0     # D7: edge-midpoint collision-cost weight (swept-feasibility)
+GPD_SEED        = None    # multi-seed CIs: RNG seed for diffusion sampling (None=unseeded)
+NAIVE_SEED      = None     # control: replace diffusion prior w/ 'linear' seed, same downstream
+SPHERE_COST     = False    # #5: use sphere-SDF (oriented-box) repair objective vs AABB proxy
 GPD_VAR_THRESH = 0.02   # inference noise schedule terminal beta (must match training; D1: 0.08)
 
 GUIDE_PATH     = './guides/'
@@ -153,6 +166,17 @@ def run_edmp_worker(dataset, env, caps, worker_id, num_workers, out_path):
             traj = guide.choose_best_trajectory(start_j, goal_j, trajs)
             if n_cub > 0: env.spawn_collision_cuboids(cub_cfg)
             if n_cyl > 0: env.spawn_collision_cylinders(cyl_cfg)
+            if USE_TRAJOPT:
+                # #2: same PRESTO-style repair as GPD, on EDMP's output (shows
+                # the feasibility lever generalizes beyond the GPD prior).
+                el = np.array([-166,-101,-166,-176,-166,-1,-166], np.float32)*(np.pi/180)
+                eu = np.array([166,101,166,-4,166,215,166], np.float32)*(np.pi/180)
+                cfn = env.configs_free if USE_PB_COLLISION else None
+                traj = trajopt_refine(traj, guide, DEVICE, iters=TRAJOPT_ITERS,
+                                      mid_w=TRAJOPT_MID_W, out_densify=TRAJOPT_DENSIFY,
+                                      collision_fn=cfn)
+                traj = np.clip(traj, el[:, None], eu[:, None])
+                plan_t = time.time() - t0
             success  = int(env.benchmark_trajectory(traj))
             t_success += success
 
@@ -171,16 +195,53 @@ def run_edmp_worker(dataset, env, caps, worker_id, num_workers, out_path):
 
 # ── GPD worker ─────────────────────────────────────────────────────────────────
 
+def build_scene_tensor(cub_cfg, cyl_cfg, n_cub, n_cyl):
+    """Build the (52,12) obstacle feature tensor + (52,) mask matching
+    gpd/preprocess_scenes.py. Inputs use fetch_data's post-roll xyzw quats;
+    roll back (+1) to the train.hdf5 (w-first) convention used at training.
+    feat = [is_cuboid, is_cylinder, cx,cy,cz, ex,ey,ez, qx,qy,qz,qw]."""
+    S, F = 52, 12
+    obs  = np.zeros((S, F), np.float32)
+    mask = np.zeros((S,),  bool)
+    # cuboids -> slots [0:40]
+    for j in range(min(n_cub, 40)):
+        c = cub_cfg[j]
+        q = np.roll(c[3:7], 1)                       # xyzw -> training convention
+        obs[j] = [1, 0, c[0], c[1], c[2],
+                  c[7]/2, c[8]/2, c[9]/2, q[0], q[1], q[2], q[3]]
+        mask[j] = True
+    # cylinders -> slots [40:52]
+    for j in range(min(n_cyl, 12)):
+        c = cyl_cfg[j]
+        q = np.roll(c[3:7], 1)
+        obs[40 + j] = [0, 1, c[0], c[1], c[2],
+                       c[7], c[8], 0.0, q[0], q[1], q[2], q[3]]
+        mask[40 + j] = True
+    return obs, mask
+
+
 def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
     lower = np.array([-166,-101,-166,-176,-166, -1,-166], np.float32) * (np.pi/180)
     upper = np.array([ 166, 101, 166,  -4, 166,215, 166], np.float32) * (np.pi/180)
 
+    if GPD_SEED is not None:
+        s = GPD_SEED + worker_id          # decorrelate workers; reproducible per seed
+        torch.manual_seed(s); np.random.seed(s)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(s)
+
     diffuser   = PolynomialDiffusion(T=GPD_T, device=DEVICE,
                                      n_control=GPD_N_CONTROL, traj_len=GPD_TRAJ_LEN,
                                      variance_thresh=GPD_VAR_THRESH)
-    model_name = GPD_MODEL_DIR + f'GPDModel{GPD_T}_N{GPD_N_CONTROL}'
-    denoiser   = TemporalUNetGPD(model_name=model_name, input_dim=7, time_dim=32,
-                                  dims=(32, 64, 128, 256), device=DEVICE)
+    if GPD_CONDITIONAL:
+        model_name = GPD_MODEL_DIR + f'GPDCondModel{GPD_T}_N{GPD_N_CONTROL}'
+        denoiser   = ConditionalTemporalUNet(model_name=model_name, input_dim=7,
+                                             time_dim=32, dims=(32, 64, 128, 256),
+                                             device=DEVICE)
+    else:
+        model_name = GPD_MODEL_DIR + f'GPDModel{GPD_T}_N{GPD_N_CONTROL}'
+        denoiser   = TemporalUNetGPD(model_name=model_name, input_dim=7, time_dim=32,
+                                      dims=(32, 64, 128, 256), device=DEVICE)
     guide_cfgs = build_guide_cfgs(GPD_GUIDES, GPD_T, GPD_BATCH_PER)
     guide_cfgs['guidance_schedule'] = guide_cfgs['guidance_schedule'] * GPD_GUIDANCE_SCALE
     total_bs   = guide_cfgs['total_batch_size']
@@ -197,25 +258,45 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
             guide  = IntersectionVolumeGuide(obs_cfg, DEVICE, guide_cfgs, total_bs)
             goal_j = filter_ik(guide, all_ik, start_j)
 
+            sc_obs = sc_mask = None
+            if GPD_CONDITIONAL:
+                sc_obs, sc_mask = build_scene_tensor(cub_cfg, cyl_cfg, n_cub, n_cyl)
+
             t0    = time.time()
-            trajs = diffuser.denoise_guided_poly(
-                model=denoiser, guide=guide, num_channels=7,
-                guidance_schedule=guide_cfgs['guidance_schedule'],
-                batch_size=total_bs, start=start_j, goal=goal_j,
-                condition=True, benchmarking=False,
-                extra_candidate_steps=GPD_EXTRA_STEPS)
+            if NAIVE_SEED == 'linear':
+                # Control: discard the diffusion prior, seed with a straight line
+                # in joint space, then run the IDENTICAL stitch+trajopt downstream.
+                seed = np.linspace(np.asarray(start_j, np.float32),
+                                   np.asarray(goal_j,  np.float32),
+                                   diffuser.traj_len).T            # (7, traj_len)
+                trajs = seed[None]                                  # (1, 7, traj_len)
+            else:
+                trajs = diffuser.denoise_guided_poly(
+                    model=denoiser, guide=guide, num_channels=7,
+                    guidance_schedule=guide_cfgs['guidance_schedule'],
+                    batch_size=total_bs, start=start_j, goal=goal_j,
+                    condition=True, benchmarking=False,
+                    extra_candidate_steps=GPD_EXTRA_STEPS,
+                    smoothness_weight=GPD_SMOOTHNESS,
+                    scene_obs=sc_obs, scene_mask=sc_mask, cfg_weight=GPD_CFG_WEIGHT)
 
             # Spawn obstacles before stitch so a PyBullet collision checker (if
             # used) sees them; harmless for the AABB/no-stitch paths.
             if n_cub > 0: env.spawn_collision_cuboids(cub_cfg)
             if n_cyl > 0: env.spawn_collision_cylinders(cyl_cfg)
 
+            cfn = env.configs_free if USE_PB_COLLISION else None
             if USE_STITCH:
-                cfn = env.configs_free if USE_PB_COLLISION else None
                 traj = stitch(trajs, guide, DEVICE, use_rrt=USE_RRT, collision_fn=cfn)
             else:
                 traj = guide.choose_best_trajectory(start_j, goal_j, trajs)
             traj = np.clip(traj, lower[:, None], upper[:, None])
+            if USE_TRAJOPT:
+                cobj = SphereSDFCost(guide, DEVICE) if SPHERE_COST else None
+                traj = trajopt_refine(traj, guide, DEVICE, iters=TRAJOPT_ITERS,
+                                      mid_w=TRAJOPT_MID_W, out_densify=TRAJOPT_DENSIFY,
+                                      cost_obj=cobj, collision_fn=cfn)
+                traj = np.clip(traj, lower[:, None], upper[:, None])
             plan_t = time.time() - t0
 
             success  = int(env.benchmark_trajectory(traj))
@@ -266,6 +347,28 @@ def main():
                         help='Multiplier on the guidance schedule (test stronger guidance)')
     parser.add_argument('--model_dir',   default=None,
                         help='Override model dir (e.g. ./models_d1/ for an ablation model)')
+    parser.add_argument('--n_control',   type=int, default=None,
+                        help='Number of Bernstein control points (D4 sweep; must match the model)')
+    parser.add_argument('--smoothness_weight', type=float, default=None,
+                        help='D4-smooth: control-point curvature penalty per denoising step')
+    parser.add_argument('--conditional', action='store_true',
+                        help='D3: use the scene-conditioned denoiser (GPDCondModel) with CFG')
+    parser.add_argument('--cfg_weight', type=float, default=None,
+                        help='D3: classifier-free guidance weight')
+    parser.add_argument('--trajopt', action='store_true',
+                        help='D6: post-hoc trajectory-optimization feasibility repair')
+    parser.add_argument('--trajopt_iters', type=int, default=None,
+                        help='D6: max trajopt iterations per scene')
+    parser.add_argument('--trajopt_densify', type=int, default=None,
+                        help='D7: output densification factor')
+    parser.add_argument('--trajopt_mid_w', type=float, default=None,
+                        help='D7: edge-midpoint collision-cost weight')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='RNG seed for diffusion sampling (multi-seed CIs)')
+    parser.add_argument('--naive_seed', default=None, choices=['linear'],
+                        help='control: replace diffusion prior with a linear seed')
+    parser.add_argument('--sphere_cost', action='store_true',
+                        help='#5: sphere-SDF oriented-box repair objective (vs AABB proxy)')
     parser.add_argument('--variance_thresh', type=float, default=None,
                         help='Inference noise schedule terminal beta (match training)')
     parser.add_argument('--out',         default=None)
@@ -275,7 +378,7 @@ def main():
         args.out = f'results/{args.method}_w{args.worker_id}.json'
 
     # ---- Apply GPD config overrides (module globals read by run_gpd_worker) ----
-    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE
+    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST
     if args.guides is not None:
         GPD_GUIDES = [int(g) for g in args.guides.split(',')]
     if args.batch_per is not None:
@@ -294,6 +397,28 @@ def main():
         GPD_MODEL_DIR = args.model_dir
     if args.variance_thresh is not None:
         GPD_VAR_THRESH = args.variance_thresh
+    if args.n_control is not None:
+        GPD_N_CONTROL = args.n_control
+    if args.smoothness_weight is not None:
+        GPD_SMOOTHNESS = args.smoothness_weight
+    if args.conditional:
+        GPD_CONDITIONAL = True
+    if args.cfg_weight is not None:
+        GPD_CFG_WEIGHT = args.cfg_weight
+    if args.trajopt:
+        USE_TRAJOPT = True
+    if args.trajopt_iters is not None:
+        TRAJOPT_ITERS = args.trajopt_iters
+    if args.trajopt_densify is not None:
+        TRAJOPT_DENSIFY = args.trajopt_densify
+    if args.trajopt_mid_w is not None:
+        TRAJOPT_MID_W = args.trajopt_mid_w
+    if args.seed is not None:
+        GPD_SEED = args.seed
+    if args.naive_seed is not None:
+        NAIVE_SEED = args.naive_seed
+    if args.sphere_cost:
+        SPHERE_COST = True
 
     caps    = FULL_CAPS if args.full else MINI_CAPS
     if args.per_type is not None:
@@ -309,7 +434,7 @@ def main():
     if args.method == 'gpd':
         print(f"  GPD config | guides={GPD_GUIDES} | batch_per={GPD_BATCH_PER} | "
               f"K={len(GPD_GUIDES)*GPD_BATCH_PER} | stitch={USE_STITCH} | "
-              f"rrt={USE_RRT} | model_dir={GPD_MODEL_DIR} | caps={caps}")
+              f"rrt={USE_RRT} | n_control={GPD_N_CONTROL} | model_dir={GPD_MODEL_DIR} | caps={caps}")
 
     if args.method == 'edmp':
         run_edmp_worker(dataset, env, caps, args.worker_id, args.num_workers, args.out)
