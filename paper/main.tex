@@ -155,7 +155,10 @@ scenes per environment type (400 total), under the GPD-stitched configuration (s
 faithful-collision RRT-Connect stitching \cite{rrtconnect2000}). Our
 re-implementation reproduces the method ordering of \cite{gpd2025} but sits
 $\sim$21\pp{} below its absolute numbers; all claims below are therefore
-\emph{deltas measured within our own system}, never cross-method absolutes.
+\emph{deltas measured within our own system}, never cross-method absolutes. The
+gap is not under-training (App.~\ref{app:repro}): the GPD paper releases no code or
+weights and leaves $K$, guidance scale, and cost formulas unspecified, and
+in-system tuning recovers only $\sim$3 of the $\sim$20\pp.
 
 \section{The Prior Is Not the Bottleneck}
 We test the five most natural prior-side improvements. Each is a clean
@@ -450,6 +453,165 @@ Five paired seeds, hybrid 400. Baseline $72.9{\pm}1.6$; conditioning
 $71.2{\pm}1.3$ ($\Delta{=}{-}1.75$, CI $[-2.37,-1.13]$); $5\times$ training
 $72.8{\pm}0.9$ ($\Delta{=}{-}0.10$, CI $[-1.71,+1.51]$); repair $81.8{\pm}1.3$
 ($\Delta{=}{+}8.9$, CI $[7.6,10.2]$).
+
+\subsection{Reproduction study: how far in-system tuning closes the gap}
+\label{app:repro}
+Our re-implementation reproduces the GPD paper's method ordering but sits
+$\sim$21\pp{} below its absolute numbers (\S\ref{sec:setup}). Because all our
+contributions are within-system deltas, absolute matching is not required; this
+study asks how much of the gap is recoverable in-system and attributes the residual.
+Crucially, the GPD paper releases \textbf{no code and no weights}, and leaves the
+guidance scale, candidate count $K$, and collision-cost formulas unspecified---so an
+exact match is not reconstructable from the paper. Training is not the cause: our
+budget already matches theirs (20k steps, same 6.54M Bernstein set), and
+$5\times$/1M-step training moves SR by $-0.1\pp$ (\S\ref{app:seeds}).
+
+Sweeping the two documented levers on the GPD-stitched config (hybrid, 400 scenes;
+Fig.~\ref{fig:repro}):
+
+\begin{center}\small
+\begin{tabular}{lrr}
+\toprule
+config & SR\% & avg t (s) \\
+\midrule
+baseline (K=32, scale 1) & 73.2 & 7.3 \\
+K=64 & 69.8 & 8.4 \\
+K=128 & \textbf{76.5} & 10.9 \\
+K=32, scale 2 & 76.0 & 7.3 \\
+K=32, scale 3 & 72.8 & 7.3 \\
+K=128, scale 3 & \textbf{76.5} & 10.9 \\
+K=32 + sphere-SDF guidance & 67.2 & 3.4 \\
+K=128 + sphere-SDF guidance & 72.0 & 4.1 \\
+\midrule
+\emph{GPD paper (unreleased weights/config)} & \emph{92.8} & \emph{1.9} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Raising the candidate budget to $K{=}128$ and the guidance scale to $2\times$ each
+add $\sim$$3\pp$, plateauing at $\mathbf{76.5\%}$ --- recovering only $\sim$3 of the
+$\sim$20\pp{} gap. Replacing the guide's inflated-AABB gradient with our exact
+sphere-SDF gradient (App.~\ref{app:sphere}) as the \emph{denoising guidance} is
+\emph{worse} ($-6\pp$): the guide's clearance/expansion schedule supplies a safety
+margin that geometric exactness does not, a further instance of objective-fidelity
+being decoupled from SR. The residual $\sim$16\pp{} is thus attributable to factors
+we cannot reconstruct from the paper --- the tuned 7-cost guidance ensemble (whose
+$1G\!\to\!7G$ gain we reproduce at $+6\pp$ vs.\ the paper's $+18\pp$), the exact
+guidance scale, and the authors' trained weights. This confirms that absolute
+cross-method comparison is unavailable here and that our within-system deltas are the
+sound unit of claim.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figs/reproduction_curve.png}
+\caption{Reproduction study on the GPD-stitched config (hybrid). In-system candidate
+and guidance-scale tuning recovers only $\sim$3 of the $\sim$20\pp{} gap to the GPD
+paper (green, unreleased weights/config); exact sphere-SDF guidance (red) is worse.}
+\label{fig:repro}
+\end{figure}
+
+\subsection{Continuous-feasibility audit and a dense repair objective}
+\label{app:continuous}
+The dominant failure (\S\ref{sec:setup}, App.~\ref{app:seeds}) is \emph{swept}
+infeasibility, yet the executor and our checks only sample the path discretely.
+Differentiable swept-volume models exist \cite{svsdf2024,neuralsvcd2025} but none are
+used inside a diffusion planner's repair loop; likewise safe-diffusion methods
+\cite{safediffuser2025} enforce constraints only at sampled points. We therefore (i)
+\emph{audit} continuous feasibility at increasing check resolution $R$ (samples per
+edge), and (ii) test a \emph{dense} repair objective that evaluates collision at $S$
+interpolated sub-configs per edge (the \S\ref{sec:repair} midpoint is $S{=}1$).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{figs/continuous_audit.png}
+\caption{Continuous-feasibility audit (100 hybrid scenes). The base planner's
+success rate collapses as the collision check densifies ($90\%$ at waypoints
+$\to76\%$ at $R{=}32$): $\sim$14\pp{} of ``waypoint-free'' plans actually sweep
+through obstacles. Repair nearly eliminates this ($84\!\to\!82\%$, flat), and a
+dense $S{=}4$ objective coincides exactly with the single-midpoint $S{=}1$ repair.}
+\label{fig:continuous}
+\end{figure}
+
+\noindent\textbf{The audit exposes a real swept gap, which repair closes.}
+Fig.~\ref{fig:continuous}: the \emph{base} planner is $90\%$ feasible at waypoints
+but only $76\%$ under a dense ($R{=}32$) continuous check --- roughly a seventh of
+nominally-free plans sweep through obstacles between waypoints. Trajectory-repair is
+nearly \emph{resolution-flat} ($84\!\to\!82\%$): it produces genuinely
+continuous-feasible paths, not just waypoint-free ones.
+
+\noindent\textbf{But a denser repair objective does not help.} Over 5 seeds
+(hybrid 400): $S{=}1$ gives $81.8{\pm}1.3$, $S{=}4$ gives $81.7{\pm}1.3$ --- a paired
+$-0.15\pp$ (95\% CI $[-0.79,+0.49]$) --- while costing $+2.5$s/scene ($9.0\!\to\!11.4$s;
+$S{=}8$ is $14.8$s). The single-midpoint swept term is already a sufficient statistic
+for continuous feasibility: because repair early-stops on a \emph{densified faithful}
+oracle, a denser \emph{differentiable} objective changes nothing --- the same
+objective-fidelity$\perp$SR decoupling seen for the noise schedule, capacity, and the
+exact sphere-SDF objective (App.~\ref{app:sphere}). Continuous feasibility is worth
+\emph{measuring} and \emph{repairing}, but not worth a heavier objective.
+
+\noindent\textbf{The audit generalizes across datasets and planners.}
+Fig.~\ref{fig:auditcross}: the waypoint$\to$dense success gap is universal --- base GPD
+loses $27/18/21\pp$ on global/hybrid/both, and EDMP loses $10\pp$ on hybrid --- and in
+every case repair flattens the curve and dynamic execution tracks the dense static
+check. This makes the audit a general evaluation-rigor prescription: learned planners
+should report success at a stated continuous-check resolution (classical planners
+already do \cite{rrtconnect2000}), not at the waypoints alone.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.98\textwidth]{figs/continuous_audit_cross.png}
+\caption{Continuous-feasibility audit across datasets (GPD: global/hybrid/both) and a
+second planner (EDMP). Base (red) success collapses as the check densifies; repair
+(blue) is nearly resolution-flat; dotted lines are dynamic-execution SR ($\approx$ the
+dense static check). The waypoint$\to$dense over-reporting is $10$--$27\pp$.}
+\label{fig:auditcross}
+\end{figure*}
+
+\subsection{Can the feasibility lever be shortcut? Two more negative levers}
+\label{app:levers}
+Beyond a denser objective, we tested two literature-motivated ways to improve/replace
+the stitch$+$trajopt machinery. Both fail to beat it, reinforcing that it is the lever.
+
+\noindent\textbf{Verifier-guided selection (best-of-$K$ by the faithful oracle).} Since
+the faithful PyBullet oracle---not the differentiable cost---gates success, we select
+the candidate with the highest densified free-fraction (a best-of-$N$ verifier
+\cite{robomonkey2025}) rather than the guide's cost. At $K{=}32$ this \emph{underperforms}
+guide-cost$+$RRT-stitch ($-3.4\pp$ with repair, 5 seeds), because stitching \emph{bridges}
+colliding segments across candidates while selection keeps only one. Its value scales
+with $K$ (Fig.~\ref{fig:alloc}): at $K{=}128$ oracle-selection$+$trajopt reaches
+$83.5{\pm}1.0$ vs.\ the $81.8{\pm}1.3$ trajopt baseline --- a paired $+1.65\pp$ (95\% CI
+$[-1.0,+4.3]$, \emph{not significant}) at $+3$s/scene. A compute-optimal-allocation grid
+over $K$, guidance, and repair iterations (per-component wall-clock: diffusion dominates
+at $\sim$7--10s, repair $\sim$1--3s, selection $<0.5$s) shows the Pareto front prefers
+oracle-selection but the frontier does not clear the trajopt baseline by a significant
+margin.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/compute_allocation.png}
+\caption{Compute-optimal allocation (hybrid). Oracle (verifier) selection's benefit
+grows with candidate budget $K$, but the 5-seed confirmation of the best point
+($K{=}128$, +trajopt) is $83.5{\pm}1.0$ --- statistically tied with the trajopt
+baseline (dashed) at higher cost.}
+\label{fig:alloc}
+\end{figure}
+
+\noindent\textbf{Learned amortized repair.} We distilled the iterative trajopt into a
+one-shot network (stitched seed $+$ obstacle set $\to$ residual repair; DeepSets scene
+encoder, endpoints pinned) from $1800$ (seed, repaired) pairs, to reclaim latency
+\cite{presto2025}. It \emph{fails}: held-out regression loss exceeds the identity
+(copy-the-seed) baseline, and in the pipeline one-shot learned repair scores
+$64.2\pm2.1$ --- \emph{worse than no repair} ($-8.7\pp$) --- while a learned$+$trajopt
+warm-start hybrid reaches only $75.6\pm1.8$ ($<$ the $81.8$ trajopt baseline) at barely
+lower latency. Distillation from this data budget does not generalize; the iterative
+oracle-gated optimization remains necessary.
+
+\noindent\textbf{Synthesis.} Across four attempts to improve or shortcut the feasibility
+machinery --- denser continuous objective, exact sphere-SDF objective/guidance,
+verifier-guided selection, and learned amortized repair --- none significantly exceeds
+plain oracle-gated trajopt repair. The lever is robust; the returns are in \emph{using}
+the faithful oracle inside stitch/repair, not in a heavier objective, a cleverer
+selector, or a distilled shortcut.
 
 \small
 \bibliographystyle{plain}

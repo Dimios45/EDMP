@@ -39,7 +39,8 @@ class PolynomialDiffusion(Diffusion):
                             smoothness_weight: float = 0.0,
                             scene_obs: np.ndarray = None,
                             scene_mask: np.ndarray = None,
-                            cfg_weight: float = 1.0) -> np.ndarray:
+                            cfg_weight: float = 1.0,
+                            sphere_cost=None) -> np.ndarray:
         """
         GPU-native guided denoising in Bernstein control-point space.
 
@@ -87,9 +88,9 @@ class PolynomialDiffusion(Diffusion):
 
         model.train(False)
         period = 2
-        collected = []   # for GPDS: trajectories from the last few denoising steps
+        collected = []   # for GPD-stitched: trajectories from the last few denoising steps
 
-        # ----- Scene conditioning (D3): precompute scene embedding once -----
+        # ----- Scene conditioning: precompute scene embedding once -----
         cond_emb = None
         if scene_obs is not None:
             with torch.no_grad():
@@ -138,16 +139,31 @@ class PolynomialDiffusion(Diffusion):
                     q_int_gpu = torch.clamp(q_t[:, :, 1:-1],
                                             lower[:, None], upper[:, None])
 
-                # guide.get_gradient: numpy in/out, GPU compute internally
-                grad_q_np = guide.get_gradient(
-                    q_int_gpu.cpu().numpy(), start[:], goal[:], t
-                )  # (batch, 7, N-2)
-
                 with torch.no_grad():
                     full_grad = torch.zeros(batch_size, num_channels,
                                             self.traj_len, device=dev)
-                    full_grad[:, :, 1:-1] = torch.tensor(
-                        grad_q_np, dtype=torch.float32, device=dev)
+                if sphere_cost is not None:
+                    # Exact sphere-SDF (oriented-box) guidance: autograd the
+                    # differentiable penetration cost w.r.t. the waypoints, then
+                    # unit-normalize per sample so the tuned schedule scale applies
+                    # (mirrors the guide's grad_norm). No clearance/expansion margin.
+                    q_full = q_t.detach().clone().requires_grad_(True)
+                    pen = sphere_cost.cost(q_full, t=0, batch_size=batch_size).sum()
+                    g = torch.autograd.grad(pen, q_full)[0]           # (batch, 7, N)
+                    with torch.no_grad():
+                        gi = g[:, :, 1:-1]
+                        n = gi.flatten(1).norm(dim=1).clamp(min=1e-8).view(-1, 1, 1)
+                        full_grad[:, :, 1:-1] = gi / n
+                else:
+                    # guide.get_gradient: numpy in/out, GPU compute internally
+                    grad_q_np = guide.get_gradient(
+                        q_int_gpu.cpu().numpy(), start[:], goal[:], t
+                    )  # (batch, 7, N-2)
+                    with torch.no_grad():
+                        full_grad[:, :, 1:-1] = torch.tensor(
+                            grad_q_np, dtype=torch.float32, device=dev)
+
+                with torch.no_grad():
                     # Precondition: dJ/d_alpha = full_grad_q @ B
                     grad_alpha = full_grad @ B_gpu                    # (batch, 7, M)
                     # Zero boundary gradients — start/goal control points are
@@ -171,7 +187,7 @@ class PolynomialDiffusion(Diffusion):
                     alpha_t[:, :, 0]  = start_t
                     alpha_t[:, :, -1] = goal_t
 
-            # GPDS: collect candidate trajectories from the last few steps
+            # GPD-stitched: collect candidate trajectories from the last few steps
             if extra_candidate_steps > 0 and t <= extra_candidate_steps:
                 with torch.no_grad():
                     collected.append((alpha_t @ B_gpu.T).cpu().numpy())

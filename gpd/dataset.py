@@ -13,7 +13,7 @@ import torch
 
 class ConditionalBernsteinDataset:
     """
-    Control-point trajectories + per-scene obstacle sets for D3 (scene-conditioned).
+    Control-point trajectories + per-scene obstacle sets (scene-conditioned).
 
     control_points : gpd_train_combined.hdf5  (2N, 7, M)  hybrid ++ global
     scenes         : scenes_unique.hdf5        (N, 52, 12) + mask (N, 52)
@@ -79,7 +79,7 @@ class BernsteinTrajectoryDataset:
         Args:
             hdf5_path        : path to HDF5 produced by preprocess_data.py
             n_diffusion_steps: T (number of diffusion steps)
-            variance_thresh  : terminal beta for the linear schedule (D1: tune
+            variance_thresh  : terminal beta for the linear schedule (schedule ablation: tune
                                so alpha_bar_T -> 0 for the short T=64 chain)
             schedule         : 'linear' or 'cosine'
         """
@@ -127,7 +127,7 @@ class BernsteinTrajectoryDataset:
 
         t_steps = np.random.randint(1, self.T + 1, size=(B,))
 
-        # Variance schedule (D1: calibrated to the short chain). Must match the
+        # Variance schedule (calibrated to the short chain). Must match the
         # schedule used by PolynomialDiffusion at inference time.
         if self.schedule == 'cosine':
             f = np.cos((np.arange(self.T + 1) / self.T + 0.008)

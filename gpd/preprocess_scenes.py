@@ -1,5 +1,5 @@
 """
-Build per-scene obstacle tensors for D3 (scene-conditioned GPD).
+Build per-scene obstacle tensors (scene-conditioned GPD).
 
 Each scene -> fixed set of obstacle primitive slots (40 cuboid + 12 cylinder):
   feat (12) = [is_cuboid, is_cylinder, cx,cy,cz, ex,ey,ez, qx,qy,qz,qw]

@@ -1,5 +1,5 @@
 #!/bin/bash
-# D6: continuous-feasibility repair. base vs densify-only vs trajopt+densify.
+# Continuous-feasibility trajectory-optimization repair: base vs densify-only vs trajopt+densify.
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -14,7 +14,7 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir" logs
     for p in "${pids[@]}"; do wait $p; done
     $PY merge_results.py --method gpd --num_workers $NW --results_dir "$rdir" --out "$rdir/summary.json"
 }
-run d6_base
-run d6_dense   --trajopt --trajopt_iters 0
-run d6_full    --trajopt --trajopt_iters 60
-echo "===== D6 DONE $(date) ====="
+run repair_off
+run repair_densify   --trajopt --trajopt_iters 0
+run repair_full    --trajopt --trajopt_iters 60
+echo "===== REPAIR DONE $(date) ====="

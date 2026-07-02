@@ -25,3 +25,5 @@ paper/*.blg
 paper/*.out
 results/*/gpd_w*.json
 results/*/edmp_w*.json
+results/_datagen_*
+results/repair_pairs*/

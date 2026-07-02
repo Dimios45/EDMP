@@ -1,6 +1,6 @@
 #!/bin/bash
-# Multi-seed CIs on the headline base-vs-D6 comparison.
-# 5 seeds x {plain GPD, GPD+trajopt}, GPDS config, hybrid balanced 400, 8 workers.
+# Multi-seed CIs on the headline baseline-vs-repair comparison.
+# 5 seeds x {plain GPD, GPD+trajopt}, GPD-stitched config, hybrid balanced 400, 8 workers.
 # Establishes baseline SR variance (sigma) + a CI on the +10pp trajopt delta.
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
@@ -21,7 +21,7 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
     echo "===== $(date) :: DONE $tag =====" | tee -a "$LOG"
 }
 for s in $SEEDS; do
-    run seed_base_s$s            --seed $((1000*(s+1)))
-    run seed_d6_s$s   --trajopt --trajopt_iters 60 --seed $((1000*(s+1)))
+    run seed_baseline_s$s            --seed $((1000*(s+1)))
+    run seed_repair_s$s   --trajopt --trajopt_iters 60 --seed $((1000*(s+1)))
 done
 echo "===== ALL SEED RUNS DONE $(date) =====" | tee -a "$LOG"

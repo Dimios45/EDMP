@@ -1,5 +1,5 @@
 """
-Scene-conditioned TemporalUNet for D3 (classifier-free guided polynomial diffusion).
+Scene-conditioned TemporalUNet (classifier-free guided polynomial diffusion).
 
 Conditioning is injected by ADDING a scene embedding to the time embedding, so it
 flows through the existing FiLM machinery in every Down/Middle/Up block with no

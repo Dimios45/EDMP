@@ -1,5 +1,5 @@
 #!/bin/bash
-# D4 ablation: N16@20k vs N8@20k, identical GPDS config, 100 scenes/type hybrid.
+# Polynomial-capacity ablation: n=16 vs n=8, identical GPD-stitched config, 100 scenes/type hybrid.
 # Single-variable comparison (only n_control differs; same 20k budget).
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
@@ -11,7 +11,7 @@ COMMON="--method gpd --guides 1 --batch_per 32 --pybullet_collision --per_type 1
 
 run_model () {   # $1=tag  $2=n_control  $3=model_dir
     tag=$1; nc=$2; mdir=$3
-    rdir=results/d4_$tag
+    rdir=results/capacity_$tag
     mkdir -p "$rdir" logs
     echo "===== $(date) :: launching $tag (n_control=$nc, model_dir=$mdir) ====="
     pids=()

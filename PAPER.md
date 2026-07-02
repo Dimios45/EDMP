@@ -30,7 +30,7 @@ We ran those improvements as controlled, single-variable experiments and found t
 
 **Success metric (paper-faithful).** Execute the trajectory in PyBullet with position control; success = no obstacle contact during execution (`getContactPoints` vs the obstacle bodies). This is a *continuous-execution* test, not a waypoint check.
 
-**Setup.** All numbers below are on the MPiNets **hybrid-solvable** set, balanced 100 scenes per environment type (400 total) unless noted, under the GPDS configuration (single guide, K=32, faithful-collision RRT stitching).
+**Setup.** All numbers below are on the MPiNets **hybrid-solvable** set, balanced 100 scenes per environment type (400 total) unless noted, under the GPD-stitched configuration (single guide, K=32, faithful-collision RRT stitching).
 
 ---
 
@@ -38,10 +38,10 @@ We ran those improvements as controlled, single-variable experiments and found t
 
 We test the four most natural prior-side improvements. Each is a clean single-variable change; all share the identical guidance + stitching pipeline.
 
-### 3.1 Noise-schedule recalibration (D1)
+### 3.1 Noise-schedule recalibration
 At T=64 the linear schedule gives ᾱ_T≈0.52 — the model is never trained near pure noise, while inference starts from N(0,I). The "fix" (raise terminal noise so ᾱ_T≈0, or cosine) **lowered SR on all scene types** despite a **lower** training loss (0.53→0.43 ε-MSE). Mechanism: the low-terminal-noise regime keeps the reverse process near-identity, acting as an implicit smoothness prior; raising terminal noise injects variance and yields less-smooth, more-colliding paths. *ε-loss is a poor proxy for planning SR.*
 
-### 3.2 Polynomial capacity (D4)
+### 3.2 Polynomial capacity
 Bernstein reconstruction error on the expert demos shows degree-7 (n=8) **discards 5–17° of joint motion on the constrained (hybrid) demonstrations** (mean 5.47°, p99 17.4°; 90% of trajectories lose >2°), vs 0.96° on the easy (global) demos — so the representation *is* lossy exactly where GPD struggles. Yet training n=16 (4× lower reconstruction error, matched convergence loss 0.476≈n=8's 0.48) gives:
 
 | | overall | tab | cubby | merged | dresser |
@@ -51,9 +51,9 @@ Bernstein reconstruction error on the expert demos shows degree-7 (n=8) **discar
 
 Capacity is a **net −6.3pp**, with a telling redistribution (n=16 *beats* n=8 on the sharp-turn dresser scenes but loses on tabletop/cubby) and costs 5× the training. A smoothness penalty on n=16 recovers only +3.4pp (peak 59.2% at λ=0.03). The compact basis is a better-conditioned generative target; capacity is not the constraint.
 
-**Mechanism (compression = smoothness regularizer).** Measuring the *raw* sampled trajectories (100 hybrid scenes, before any stitch/repair), the compact n=8 prior is markedly smoother than n=16: joint-jerk RMS **0.00166 vs 0.00214 (−22%)**, acceleration RMS 0.0071 vs 0.0079, and a larger sphere-SDF clearance margin (−0.043 vs −0.047 m). The low-degree Bézier basis cannot express the high-frequency motion that a higher-capacity model fits to the demos, so it acts as an implicit smoothness prior — and smoother trajectories collide less under continuous execution. This is the same effect seen across D1/D3/D4: nominal generative fidelity (reconstruction error, ε-loss) is decoupled from — here anti-correlated with — the smoothness that actually drives planning SR (see `results/smoothness_jerk.png`).
+**Mechanism (compression = smoothness regularizer).** Measuring the *raw* sampled trajectories (100 hybrid scenes, before any stitch/repair), the compact n=8 prior is markedly smoother than n=16: joint-jerk RMS **0.00166 vs 0.00214 (−22%)**, acceleration RMS 0.0071 vs 0.0079, and a larger sphere-SDF clearance margin (−0.043 vs −0.047 m). The low-degree Bézier basis cannot express the high-frequency motion that a higher-capacity model fits to the demos, so it acts as an implicit smoothness prior — and smoother trajectories collide less under continuous execution. This is the same effect seen across the schedule, conditioning, and capacity interventions: nominal generative fidelity (reconstruction error, ε-loss) is decoupled from — here anti-correlated with — the smoothness that actually drives planning SR (see `results/smoothness_jerk.png`).
 
-### 3.3 Scene-conditioned denoiser + classifier-free guidance (D3)
+### 3.3 Scene-conditioned denoiser + classifier-free guidance
 We add a masked-DeepSets obstacle-set encoder whose embedding is added to the time embedding (flowing through the existing FiLM), with a learned null embedding for CFG (15% scene-dropout). The conditioned model reaches a **lower** loss (0.502 < 0.52).
 
 | config | overall | tab | cubby | merged | dresser |
@@ -73,7 +73,7 @@ The most basic prior-side lever is simply *more training*. We train the canonica
 | plain GPD | 72.8 | 74.2 | +1.4 |
 | GPD + trajopt repair (§4.3) | 83.0 | 82.2 | −0.8 |
 
-The single-run table shows a nominal +1.4pp on the bare planner, but over **5 paired seeds** the long-prior delta is **−0.10pp, 95% CI [−1.71, +1.51]** (t=−0.17) — statistically indistinguishable from zero — and it stays flat once repair is applied. A 5× better-converged prior buys **nothing**, and it does **not** close the reproduction gap to published GPDS (92.8). This rules out under-training as the explanation both for the flat prior-side results and for the gap: the negative result is a property of the guided-planning system, not of an undertrained model.
+The single-run table shows a nominal +1.4pp on the bare planner, but over **5 paired seeds** the long-prior delta is **−0.10pp, 95% CI [−1.71, +1.51]** (t=−0.17) — statistically indistinguishable from zero — and it stays flat once repair is applied. A 5× better-converged prior buys **nothing**, and it does **not** close the reproduction gap to the published GPD-stitched baseline (92.8). This rules out under-training as the explanation both for the flat prior-side results and for the gap: the negative result is a property of the guided-planning system, not of an undertrained model.
 
 ### 3.6 Summary
 Five prior improvements, five nominal-metric gains, **no positive SR gain** — the deltas range from statistically zero (5× training: −0.1pp, CI [−1.7,+1.5]) to small significant *decreases* (conditioning −1.75pp; schedule and capacity larger drops). The ~72% hybrid ceiling is invariant to (or mildly worsened by) prior-side change. Against a measured baseline sampling noise of σ≈1.6pp (§4.3), no prior intervention clears it upward, while the feasibility-repair lever (§4.3) clears it by ~6σ.
@@ -162,6 +162,42 @@ The two effective levers are both on the **inference-time feasibility machinery*
 
 **Limitations / next.** Core results are on hybrid-solvable, balanced 100/type (400 scenes); the trajopt knobs are ablated in §4.4 and the repair lever is shown to generalize across global/both-solvable splits (+6 to +9pp, App.). Remaining: larger N for tighter CIs, and a time/accuracy Pareto against EDMP, MPiNets, and cuRobo. The trajopt repair uses the smooth AABB proxy as its differentiable objective and the faithful PyBullet check as the stopping oracle; we implemented an exact GPU-batched sphere-SDF objective (§4.7) and found it statistically tied with the proxy, so objective exactness is not a remaining lever here.
 
+### 5.1 Reproduction study (how far in-system tuning closes the gap)
+Our re-implementation reproduces the paper's method *ordering* but sits ~21pp below its absolute numbers. Because every contribution here is a within-system delta, absolute matching is not required — but we quantify what is recoverable and attribute the rest. The GPD paper releases **no code and no weights**, and leaves guidance scale, candidate count K, and collision-cost formulas unspecified; training is not the cause (our budget matches; 5×/1M-step training moves SR −0.1pp). Sweeping the two documented levers on the GPD-stitched config (hybrid 400):
+
+| config | SR% | avg t |
+|---|---|---|
+| baseline (K=32, scale 1) | 73.2 | 7.3s |
+| K=128 | **76.5** | 10.9s |
+| K=32, scale 2 | 76.0 | 7.3s |
+| K=128, scale 3 | **76.5** | 10.9s |
+| K=32 + sphere-SDF guidance | 67.2 | 3.4s |
+| K=128 + sphere-SDF guidance | 72.0 | 4.1s |
+| *GPD paper (unreleased weights/config)* | *92.8* | *1.9s* |
+
+Candidate budget (K→128) and guidance scale (→2×) each add ~3pp, plateauing at **76.5%** — only ~3 of the ~20pp gap. Exact sphere-SDF *guidance* is **worse** (−6pp): the guide's clearance/expansion schedule supplies a safety margin geometric exactness lacks (another fidelity⊥SR instance). The residual ~16pp is attributable to the tuned 7-cost ensemble (we reproduce 1G→7G at +6pp vs the paper's +18pp), the exact guidance scale, and the authors' weights — none reconstructable from the paper. This confirms cross-method absolutes are unavailable and within-system deltas are the sound unit of claim. (`experiments/reproduction_guidance_tuning.sh`, `results/reproduction_*`, `results/reproduction_curve.{png,json}`.)
+
+### 5.3 Beyond repair: three more levers, none beats it (audit generalizes; selection & learned-repair fail)
+Extending §5.2, we (a) ran the continuous-feasibility audit **across datasets and a 2nd planner**, and tested two ways to shortcut stitch+trajopt:
+- **Audit generalizes**: base waypoint→dense gap = **−27/−18/−21pp** (GPD global/hybrid/both) and **−10pp** (EDMP/hybrid); repair flattens it and dynamic≈dense everywhere. → learned planners should report SR at a stated continuous-check resolution. (`continuous_audit_cross.{png,json}`)
+- **Verifier-guided selection** (best-of-K by faithful oracle): at K=32 *worse* than guide+stitch (−3.4pp, stitching bridges across candidates); value scales with K but at K=128+trajopt = **83.5±1.0 vs 81.8±1.3 baseline (+1.65pp, CI [−1.0,+4.3], n.s.)** at +3s. Compute-allocation Pareto: diffusion dominates time (~7–10s), repair ~1–3s, selection <0.5s. (`compute_allocation.{png,json}`, `oracle_k128_stats.json`)
+- **Learned amortized repair** (distill trajopt → one-shot net, 1800 pairs): **fails** — one-shot = 64.2±2.1 (*worse than no repair*, val loss > identity baseline); learned+polish hybrid 75.6±1.8 (< 81.8) at barely lower latency. (`gpd/learned_repair.py`, `train_repair.py`, `results/bc_stats.json`)
+
+**Synthesis:** four attempts to improve/shortcut the feasibility machinery (denser objective, exact sphere-SDF objective/guidance, verifier selection, learned repair) — none significantly exceeds plain oracle-gated trajopt. The lever is robust; the return is in *using* the faithful oracle inside stitch/repair.
+
+### 5.2 Continuous-feasibility audit + dense repair objective
+The dominant failure is *swept* infeasibility, but the executor/checks sample the path discretely. Differentiable swept-volume models exist (SVSDF arXiv:2405.00362, NeuralSVCD 2509.00499) but none run inside a diffusion planner's repair; safe-diffusion methods (SafeDiffuser) constrain only sampled points. We (i) **audit** continuous feasibility at check resolution R (samples/edge), and (ii) test a **dense** repair objective (S sub-configs/edge; the §4.3 midpoint is S=1).
+
+**Audit (100 hybrid scenes)** — continuous SR@R:
+
+| R (samples/edge) | base | repair (S=1) | dense (S=4) |
+|---|---|---|---|
+| 1 (waypoints) | 90.0 | 84.0 | 84.0 |
+| 4 | 77.0 | 83.0 | 83.0 |
+| 32 | 76.0 | 82.0 | 82.0 |
+
+The base planner is 90% feasible at waypoints but **76% under a dense check** — ~14pp of "waypoint-free" plans sweep through obstacles. **Repair is resolution-flat (84→82%)** — it yields genuinely continuous-feasible paths. **But a denser objective doesn't help**: over 5 seeds S=1 = 81.8±1.3 vs S=4 = 81.7±1.3 (paired −0.15pp, CI [−0.79,+0.49]) at +2.5s/scene. The single-midpoint swept term is a *sufficient statistic* — because repair early-stops on a densified faithful oracle, a denser differentiable objective changes nothing (the fidelity⊥SR decoupling again). Continuous feasibility is worth *measuring* and *repairing*, not a heavier objective. (`continuous_audit.py`, `experiments/continuous_feasibility.sh`, `results/continuous_audit.{json,png}`, `results/continuous_edge_stats.json`; new flag `run_worker.py --repair_edge_samples`.)
+
 ---
 
 ## 6. Conclusion
@@ -172,15 +208,15 @@ In a controlled study of guided polynomial diffusion planning, the generative pr
 ### Appendix: artifact map
 All benchmark launchers live in `experiments/` (see `experiments/README.md` for the
 full script→section map); analysis entry points are at the repo root.
-- Prior ablations: `RESEARCH_PLAN.md` (D1–D4), `REPLICATION.md`, `results/d4_*`, `results/smooth_*`; `experiments/prior_capacity.sh`, `experiments/prior_smoothness.sh`.
-- Conditioning (D3): `gpd/conditional_unet.py`, `gpd/preprocess_scenes.py`, `train_gpd_cond.py`, `experiments/prior_conditioning{,_ablation}.sh`, `results/d3_*`.
-- Training-budget (D8, 1M steps): `models_long/GPDModel64_N8/`, `experiments/prior_long_training.sh`, `results/long_{gpd,d6}/`, `results/long_prior.json`.
-- Multi-seed CIs: `run_worker.py --seed`, `experiments/stats_seeds_base_repair.sh` (base/d6), `experiments/stats_seeds_prior.sh` (D3/D8), `results/seed_stats.json`, `results/seeds_prior_stats.json`.
-- Naive-seed control: `run_worker.py --naive_seed linear`, `experiments/feasibility_naive_seed.sh`, `results/naive_{base,d6}_s*/`, `results/naive_stats.json`.
+- Prior ablations: `RESEARCH_PLAN.md`, `REPLICATION.md`, `results/capacity_*`, `results/smoothness_lam*`; `experiments/prior_capacity.sh`, `experiments/prior_smoothness.sh`.
+- Conditioning: `gpd/conditional_unet.py`, `gpd/preprocess_scenes.py`, `train_gpd_cond.py`, `experiments/prior_conditioning{,_ablation}.sh`, `results/conditioning_*`.
+- Extended training (1M steps): `models_long/GPDModel64_N8/`, `experiments/prior_long_training.sh`, `results/extended_{gpd,repair}/`, `results/extended_prior.json`.
+- Multi-seed CIs: `run_worker.py --seed`, `experiments/stats_seeds_base_repair.sh` (baseline/repair), `experiments/stats_seeds_prior.sh` (conditioning/extended), `results/seed_stats.json`, `results/seeds_prior_stats.json`.
+- Linear-seed control: `run_worker.py --naive_seed linear`, `experiments/feasibility_naive_seed.sh`, `results/linearseed_{baseline,repair}_s*/`, `results/linearseed_stats.json`.
 - Failure analysis (base + post-repair shift): `diag_failures.py [N] [base|d6]`, `results/failure_modes{,_d6}.json`, `results/failure_shift.png`.
 - Cross-planner repair (EDMP): `run_worker.py --method edmp --trajopt`, `experiments/feasibility_cross_planner.sh`, `results/edmp_{base,d6}/`.
 - Mechanism figure (compression=regularizer): `analyze_smoothness.py`, `results/smoothness_stats.json`, `results/smoothness_jerk.png`.
 - Exact collision objective: `gpd/sphere_collision.py`, `run_worker.py --sphere_cost`, `experiments/feasibility_sphere_collision.sh`, `results/sphere_stats.json`.
-- Feasibility levers: `gpd/stitch.py` (faithful-collision RRT), `gpd/refine.py` (trajopt repair), `experiments/feasibility_repair.sh`, `results/d6_*`; trajopt ablation `experiments/feasibility_repair_pareto.sh`, `results/d7_*`, `results/d7_pareto.json`.
-- Matched-split baselines: `experiments/baselines.sh`, `results/base_*`.
+- Feasibility levers: `gpd/stitch.py` (faithful-collision RRT), `gpd/refine.py` (trajopt repair), `experiments/feasibility_repair.sh`, `results/repair_{off,densify,full}`; trajopt ablation `experiments/feasibility_repair_pareto.sh`, `results/repair_pareto_*`, `results/repair_pareto.json`.
+- Matched-split baselines: `experiments/baselines.sh`, `results/baseline_*`.
 - Reproduction harness: `run_worker.py` (flags `--n_control --conditional --cfg_weight --trajopt --trajopt_iters --sphere_cost --naive_seed --seed --pybullet_collision …`), `experiments/*.sh`, `merge_results.py`.

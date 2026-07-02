@@ -41,7 +41,7 @@ def main():
     parser.add_argument('--epochs',     type=int, default=20000)
     parser.add_argument('--batch_size', type=int, default=2048)
     parser.add_argument('--variance_thresh', type=float, default=0.02,
-                        help='Terminal beta for linear schedule (D1: 0.08 for T=64)')
+                        help='Terminal beta for linear schedule (schedule-ablation value 0.08 for T=64)')
     parser.add_argument('--schedule',   default='linear', choices=['linear', 'cosine'])
     parser.add_argument('--lr',         type=float, default=1e-4)
     parser.add_argument('--wandb',      action='store_true')

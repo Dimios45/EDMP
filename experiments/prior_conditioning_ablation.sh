@@ -17,7 +17,7 @@ run () {  # $1=tag  $2..=extra flags
     $PY merge_results.py --method gpd --num_workers $NW --results_dir "$rdir" --out "$rdir/summary.json"
 }
 # C: conditioned, NO cost-gradient guidance (CFG-only prior)
-run d3_cfgonly --conditional --cfg_weight 2.0 --guidance_scale 0.0
+run conditioning_cfg_only --conditional --cfg_weight 2.0 --guidance_scale 0.0
 # D: unconditioned, NO guidance (prior-only control)
-run d3_prioronly --guidance_scale 0.0
-echo "===== D3 ABLATE DONE $(date) ====="
+run conditioning_prior_only --guidance_scale 0.0
+echo "===== CONDITIONING-ABLATION DONE $(date) ====="

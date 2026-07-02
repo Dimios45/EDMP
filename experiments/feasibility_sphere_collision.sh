@@ -1,7 +1,7 @@
 #!/bin/bash
 # #5: sphere-SDF (oriented-box) repair objective vs the AABB-proxy objective.
 # Same pipeline, only the trajopt collision cost differs. 3 seeds, hybrid 400.
-# Compare vs AABB repair (d6) 81.8+/-1.3 (seed_stats.json).
+# Compare vs AABB repair 81.8+/-1.3 (seed_stats.json).
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -21,6 +21,6 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
     echo "===== $(date) :: DONE $tag =====" | tee -a "$LOG"
 }
 for s in $SEEDS; do
-    run sphere_d6_s$s   --sphere_cost --seed $((1000*(s+1)))
+    run repair_sphere_s$s   --sphere_cost --seed $((1000*(s+1)))
 done
 echo "===== ALL SPHERE RUNS DONE $(date) =====" | tee -a "$LOG"

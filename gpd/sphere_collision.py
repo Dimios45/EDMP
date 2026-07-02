@@ -1,5 +1,5 @@
 """
-#5: Exact-er GPU-batched differentiable collision cost for trajopt repair.
+Exact-er GPU-batched differentiable collision cost for trajopt repair.
 
 The guide's `cost()` uses an AABB-vs-AABB intersection volume: after FK it bounds
 each *rotated* robot-link box by an axis-aligned box AND uses the obstacles'

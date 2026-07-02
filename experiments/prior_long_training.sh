@@ -1,6 +1,6 @@
 #!/bin/bash
 # Verify the 1M-step "massive" prior: does 5x training move SR off the ~71% baseline?
-# GPDS config, hybrid 400 scenes, 8 workers. Plain GPD and GPD+D6 (trajopt) on the long prior.
+# GPD-stitched config, hybrid 400 scenes, 8 workers. Plain GPD and GPD+repair on the long prior.
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -18,6 +18,6 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
     $PY merge_results.py --method gpd --num_workers $NW --results_dir "$rdir" --out "$rdir/summary.json" 2>&1 | tee -a "$LOG"
     echo "===== $(date) :: DONE $tag =====" | tee -a "$LOG"
 }
-run long_gpd
-run long_d6  --trajopt --trajopt_iters 60
+run extended_gpd
+run extended_repair  --trajopt --trajopt_iters 60
 echo "===== ALL LONG-PRIOR BENCH DONE $(date) =====" | tee -a "$LOG"

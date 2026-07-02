@@ -1,5 +1,5 @@
 #!/bin/bash
-# D4-smooth: sweep control-point curvature penalty on N16@20k.
+# Smoothness-penalty sweep: control-point curvature penalty on N16@20k.
 # Tests "compression is a regularizer": does re-imposing smoothness on the
 # high-capacity (n=16) model recover / exceed N8 (71.8%)?
 set -e
@@ -11,7 +11,7 @@ COMMON="--method gpd --guides 1 --batch_per 32 --pybullet_collision --per_type 6
 
 for lam in 0.0 0.01 0.03 0.06 0.12; do
     tag=$(echo $lam | tr '.' 'p')
-    rdir=results/smooth_$tag
+    rdir=results/smoothness_lam$tag
     mkdir -p "$rdir" logs
     echo "===== $(date) :: smoothness_weight=$lam ====="
     pids=()

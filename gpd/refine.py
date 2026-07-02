@@ -34,7 +34,7 @@ def _edge_configs(traj_np: np.ndarray, sub: int) -> np.ndarray:
 
 def trajopt_refine(traj: np.ndarray, guide, device: str,
                    iters: int = 60, lr: float = 0.02, smooth_w: float = 0.05,
-                   mid_w: float = 1.0, cost_obj=None,
+                   mid_w: float = 1.0, cost_obj=None, edge_samples: int = 1,
                    collision_fn=None, check_every: int = 5,
                    out_densify: int = 3, verify_sub: int = 4) -> np.ndarray:
     """
@@ -42,7 +42,10 @@ def trajopt_refine(traj: np.ndarray, guide, device: str,
     Returns a refined (and densified) trajectory; collision-free under the
     densified faithful check when repair succeeds, else best effort.
     cost_obj : optional object with .cost(jt,t,batch_size) -> (B,N) differentiable
-               collision cost (e.g. SphereSDFCost). Defaults to `guide` (#5 ablation).
+               collision cost (e.g. SphereSDFCost). Defaults to `guide`.
+    edge_samples : number of interior sub-configs sampled per edge for the
+               continuous (swept) collision term. S=1 = single midpoint (original);
+               S>1 = dense linear samples at j/(S+1), driving continuous feasibility.
     """
     N = traj.shape[1]
     if N < 3:
@@ -74,10 +77,15 @@ def trajopt_refine(traj: np.ndarray, guide, device: str,
 
     for it in range(iters):
         jt = assemble().unsqueeze(0)                               # (1,7,N)
-        mid = 0.5 * (jt[:, :, 1:] + jt[:, :, :-1])                 # edge midpoints
-        col = cost_obj.cost(jt, t=0, batch_size=1).sum()
-        if mid_w > 0.0:
-            col = col + mid_w * cost_obj.cost(mid, t=0, batch_size=1).sum()
+        col = cost_obj.cost(jt, t=0, batch_size=1).sum()           # waypoints
+        if mid_w > 0.0 and edge_samples > 0:
+            # dense continuous term: S linear sub-configs per edge, averaged
+            edge_col = 0.0
+            for j in range(1, edge_samples + 1):
+                f = j / (edge_samples + 1)                         # S=1 -> 0.5 (midpoint)
+                sub = (1.0 - f) * jt[:, :, :-1] + f * jt[:, :, 1:]  # (1,7,N-1)
+                edge_col = edge_col + cost_obj.cost(sub, t=0, batch_size=1).sum()
+            col = col + mid_w * edge_col / edge_samples
         acc = jt[0, :, 2:] - 2 * jt[0, :, 1:-1] + jt[0, :, :-2]
         loss = col + smooth_w * (acc ** 2).sum()
         opt.zero_grad(); loss.backward(); opt.step()

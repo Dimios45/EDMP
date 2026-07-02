@@ -2,7 +2,7 @@
 # Control #1: does the diffusion prior matter as an INITIALIZER?
 # Replace the diffusion seed with a straight-line joint-space seed, run the
 # IDENTICAL downstream (RRT stitch [+ trajopt]). 3 seeds (RRT has RNG variance).
-# Compare vs diffusion: base 72.9+/-1.6, d6 81.8+/-1.3 (results/seed_stats.json).
+# Compare vs diffusion: baseline 72.9+/-1.6, repair 81.8+/-1.3 (results/seed_stats.json).
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -22,7 +22,7 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
     echo "===== $(date) :: DONE $tag =====" | tee -a "$LOG"
 }
 for s in $SEEDS; do
-    run naive_base_s$s            --seed $((1000*(s+1)))
-    run naive_d6_s$s   --trajopt --trajopt_iters 60 --seed $((1000*(s+1)))
+    run linearseed_baseline_s$s            --seed $((1000*(s+1)))
+    run linearseed_repair_s$s   --trajopt --trajopt_iters 60 --seed $((1000*(s+1)))
 done
 echo "===== ALL NAIVE RUNS DONE $(date) =====" | tee -a "$LOG"

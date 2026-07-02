@@ -20,12 +20,12 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
 }
 
 # ---- #2: EDMP base vs EDMP + same trajopt repair (balanced 400 hybrid) ----
-run edmp_base
-run edmp_d6   --pybullet_collision --trajopt --trajopt_iters 60
+run edmp_baseline
+run edmp_repair   --pybullet_collision --trajopt --trajopt_iters 60
 
 # ---- #3: failure-mode shift after repair (GPD, 50/type = 200 scenes) ----
 echo "===== $(date) :: START diag_d6 =====" | tee -a "$LOG"
-$PY diag_failures.py 50 d6 2>&1 | tee -a "$LOG"
+$PY diag_failures.py 50 repair 2>&1 | tee -a "$LOG"
 echo "===== $(date) :: DONE diag_d6 =====" | tee -a "$LOG"
 
 echo "===== ALL BATCH23 DONE $(date) =====" | tee -a "$LOG"

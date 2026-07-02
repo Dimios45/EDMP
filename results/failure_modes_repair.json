@@ -1,0 +1,22 @@
+{
+  "mode": "repair",
+  "per_type": {
+    "tabletop": {
+      "success": 2
+    },
+    "cubby": {
+      "success": 2
+    },
+    "merged_cubby": {
+      "success": 1,
+      "path_collision": 1
+    },
+    "dresser": {
+      "success": 2
+    }
+  },
+  "agg": {
+    "success": 7,
+    "path_collision": 1
+  }
+}

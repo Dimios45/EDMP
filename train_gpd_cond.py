@@ -1,5 +1,5 @@
 """
-Train a scene-conditioned GPD denoiser (D3) with classifier-free guidance.
+Train a scene-conditioned GPD denoiser with classifier-free guidance.
 
 Conditioning = DeepSets obstacle-set encoder added to the time embedding.
 During training the scene is dropped to a learned null embedding with prob

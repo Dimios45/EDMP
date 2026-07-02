@@ -1,5 +1,5 @@
 #!/bin/bash
-# D7: trajopt hyperparameter ablation -> time/accuracy Pareto.
+# Trajopt hyperparameter ablation -> time/accuracy Pareto.
 # One-factor-at-a-time around the default anchor (iters=60, densify=3, mid_w=1.0).
 # hybrid, 100/type (400 scenes), 8 workers. summary.json carries avg plan_time.
 set -e
@@ -21,22 +21,22 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
 }
 
 # Anchor (iters=60, densify=3, mid_w=1.0)
-run d7_anchor      --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 1.0
+run repair_pareto_default      --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 1.0
 
 # iters sweep (densify=3, mid_w=1.0); iters=0 == densify-only floor
-run d7_iters0      --trajopt_iters 0   --trajopt_densify 3 --trajopt_mid_w 1.0
-run d7_iters20     --trajopt_iters 20  --trajopt_densify 3 --trajopt_mid_w 1.0
-run d7_iters40     --trajopt_iters 40  --trajopt_densify 3 --trajopt_mid_w 1.0
-run d7_iters100    --trajopt_iters 100 --trajopt_densify 3 --trajopt_mid_w 1.0
+run repair_pareto_iters0      --trajopt_iters 0   --trajopt_densify 3 --trajopt_mid_w 1.0
+run repair_pareto_iters20     --trajopt_iters 20  --trajopt_densify 3 --trajopt_mid_w 1.0
+run repair_pareto_iters40     --trajopt_iters 40  --trajopt_densify 3 --trajopt_mid_w 1.0
+run repair_pareto_iters100    --trajopt_iters 100 --trajopt_densify 3 --trajopt_mid_w 1.0
 
 # densify sweep (iters=60, mid_w=1.0); densify=1 == no output densification
-run d7_dens1       --trajopt_iters 60  --trajopt_densify 1 --trajopt_mid_w 1.0
-run d7_dens2       --trajopt_iters 60  --trajopt_densify 2 --trajopt_mid_w 1.0
-run d7_dens5       --trajopt_iters 60  --trajopt_densify 5 --trajopt_mid_w 1.0
+run repair_pareto_dens1       --trajopt_iters 60  --trajopt_densify 1 --trajopt_mid_w 1.0
+run repair_pareto_dens2       --trajopt_iters 60  --trajopt_densify 2 --trajopt_mid_w 1.0
+run repair_pareto_dens5       --trajopt_iters 60  --trajopt_densify 5 --trajopt_mid_w 1.0
 
 # midpoint-weight sweep (iters=60, densify=3); mid_w=0 == waypoints-only objective
-run d7_mid0        --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 0.0
-run d7_mid0p5      --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 0.5
-run d7_mid2        --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 2.0
+run repair_pareto_midw0        --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 0.0
+run repair_pareto_midw0p5      --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 0.5
+run repair_pareto_midw2        --trajopt_iters 60  --trajopt_densify 3 --trajopt_mid_w 2.0
 
-echo "===== ALL D7 DONE $(date) =====" | tee -a "$LOG"
+echo "===== REPAIR-PARETO DONE $(date) =====" | tee -a "$LOG"

@@ -20,7 +20,7 @@ from gpd.refine import trajopt_refine
 
 DEV = RW.DEVICE
 PER_TYPE = int(sys.argv[1]) if len(sys.argv) > 1 else 50
-MODE     = sys.argv[2] if len(sys.argv) > 2 else 'base'   # 'base' | 'd6' (apply repair)
+MODE     = sys.argv[2] if len(sys.argv) > 2 else 'base'   # 'base' | 'repair' (apply repair)
 SCENE_TYPES = ['tabletop', 'cubby', 'merged_cubby', 'dresser']
 lower = np.array([-166,-101,-166,-176,-166,-1,-166], np.float32)*(np.pi/180)
 upper = np.array([166,101,166,-4,166,215,166], np.float32)*(np.pi/180)
@@ -52,7 +52,7 @@ for st in SCENE_TYPES:
         sfree = bool(env.configs_free(start_j[None])[0])
         traj = stitch(trajs, guide, DEV, use_rrt=True, collision_fn=env.configs_free)
         traj = np.clip(traj, lower[:,None], upper[:,None])
-        if MODE == 'd6':
+        if MODE == 'repair':
             traj = trajopt_refine(traj, guide, DEV, iters=60,
                                   collision_fn=env.configs_free)
             traj = np.clip(traj, lower[:,None], upper[:,None])

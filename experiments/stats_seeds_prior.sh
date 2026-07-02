@@ -1,8 +1,8 @@
 #!/bin/bash
-# #6: per-intervention seeds for the null results, so D3/D8 get their own n=5 CIs
+# Per-intervention seeds for the null results, so conditioning & extended-training get their own n=5 CIs
 # (rather than only being bounded by the baseline sigma).
-#   D3 = scene-conditioned denoiser + guidance (cfg_w=1)
-#   D8 = 1M-step long prior (plain GPD)
+#   conditioning = scene-conditioned denoiser + guidance (cfg_w=1)
+#   extended = 1M-step long prior (plain GPD)
 # hybrid balanced 400, 5 seeds each. Compare vs base 72.9+/-1.6 (seed_stats.json).
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."
@@ -23,7 +23,7 @@ run () { tag=$1; shift; rdir=results/$tag; mkdir -p "$rdir"
     echo "===== $(date) :: DONE $tag =====" | tee -a "$LOG"
 }
 for s in $SEEDS; do
-    run seed_d3_s$s   --model_dir ./models/      --conditional --cfg_weight 1 --seed $((1000*(s+1)))
-    run seed_d8_s$s   --model_dir ./models_long/                              --seed $((1000*(s+1)))
+    run seed_conditioning_s$s   --model_dir ./models/      --conditional --cfg_weight 1 --seed $((1000*(s+1)))
+    run seed_extended_s$s   --model_dir ./models_long/                              --seed $((1000*(s+1)))
 done
 echo "===== ALL SEEDS2 DONE $(date) =====" | tee -a "$LOG"
