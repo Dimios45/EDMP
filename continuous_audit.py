@@ -108,7 +108,7 @@ def main():
     print(f"{'R':>4} " + " ".join(f"{m:>10}" for m in modes))
     for r in RES: print(f"{r:>4} " + " ".join(f"{res['continuous_SR'][m][r]:>10}" for m in modes))
     print("dyn  " + " ".join(f"{res['dynamic_SR'][m]:>10}" for m in modes))
-    outf = f'results/continuous_audit_{args.method}_{args.dataset}.json'
+    outf = f'results/continuous_audit_{args.method}_{args.dataset}_s{args.seed}.json'
     json.dump(res, open(outf, 'w'), indent=2); print("saved", outf)
 
 

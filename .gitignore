@@ -27,3 +27,8 @@ results/*/gpd_w*.json
 results/*/edmp_w*.json
 results/_datagen_*
 results/repair_pairs*/
+paper_audit/*.aux
+paper_audit/*.log
+paper_audit/*.bbl
+paper_audit/*.blg
+paper_audit/*.out

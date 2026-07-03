@@ -4,7 +4,10 @@
 \usepackage{times}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\newtheorem{proposition}{Proposition}
 \usepackage{caption}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
@@ -36,12 +39,12 @@ improves, with deltas ranging from statistically zero to small significant
 \emph{decreases}, even when the interventions lower training loss or
 reconstruction error. A failure-mode analysis isolates \emph{continuous (swept)}
 infeasibility as the dominant residual failure. Acting on it, two interventions
-on the \emph{feasibility machinery}---faithful-collision RRT stitching ($+14\pp$)
-and a trajectory-optimization repair ($+8.9\pp$, 95\% CI {$[7.6,10.2]$})---break the
+on the \emph{feasibility machinery}---faithful-collision RRT stitching ($+17.4\pp$,
+CI~{$[15.2,19.6]$}) and a trajectory-optimization repair ($+8.9\pp$, 95\% CI {$[7.6,10.2]$})---break the
 plateau that no prior-side change could. A naive-seed control sharpens the claim:
 the prior is \emph{necessary} as an initializer (a straight-line seed with the
 same repair reaches only 55\% vs.\ 82\%) but \emph{improving} it does not help. The
-repair lever transfers to a second planner (EDMP, $+10.3\pp$) and collapses the
+repair lever transfers to a second planner (EDMP, $+7.6\pp$, CI~{$[5.2,9.9]$}) and collapses the
 diagnosed swept-collision failure ($15.5\%\!\to\!3.0\%$). We argue the community's
 effort is mis-allocated and release an open, GPU-native re-implementation with all
 ablations.
@@ -76,7 +79,10 @@ reports that negative result, explains it, and then shows where the gains actual
 are: the inference-time feasibility machinery. Our central, somewhat contrarian
 claim is that for guided diffusion planners a competent prior is ``good enough,''
 and the returns lie in collision-aware stitching and trajectory-optimization
-repair.
+repair. This is the motion-planning instance of a broader pattern---that
+\emph{inference-time compute}, not further model improvement, is where marginal gains
+lie for diffusion models \cite{inftimescale2025}---and we make it concrete and
+measurable for a robotics task with a faithful feasibility oracle.
 
 The stakes are practical. Retraining a prior---a new schedule, a larger basis,
 scene conditioning, or simply a longer run---costs GPU-days and is the default
@@ -96,8 +102,8 @@ single favorable configuration.
 \item A \textbf{failure-mode diagnosis} isolating continuous/swept infeasibility as
   the dominant residual failure, and its \emph{closure} after repair.
 \item \textbf{Two positive levers on the feasibility machinery}: faithful-collision
-  stitching ($+14\pp$) and trajectory-optimization repair ($+8.9\pp$ on GPD,
-  $+10.3\pp$ on EDMP---planner-agnostic).
+  stitching ($+17.4\pp$) and trajectory-optimization repair ($+8.9\pp$ on GPD,
+  $+7.6\pp$ on EDMP---planner-agnostic, all 95\% CI-backed).
 \item A \textbf{naive-seed control} scoping the claim: the prior is a necessary
   initializer, not a tunable lever.
 \item An \textbf{open, GPU-native} re-implementation with every ablation.
@@ -111,7 +117,10 @@ inference, EDMP using an ensemble of guidance costs. GPD \cite{gpd2025} makes th
 fast by compressing trajectories to a low-degree Bernstein basis and shortening the
 diffusion chain. This line of work overwhelmingly improves the \emph{prior}: the
 schedule, the representation, or scene conditioning. We instead hold the prior
-fixed and interrogate whether those improvements pay off.
+fixed and interrogate whether those improvements pay off. In image diffusion,
+inference-time compute has recently been shown to outscale further denoising-step or
+model improvements \cite{inftimescale2025}; we find the planning analogue---the
+inference-time feasibility machinery, not the prior, is where SR is won.
 
 \noindent\textbf{Feasibility repair.} A parallel thread refines a learned or sampled
 seed with trajectory optimization: PRESTO \cite{presto2025} and MPD
@@ -189,7 +198,23 @@ Fig.~\ref{fig:jerk}), with a larger clearance margin. The low-degree basis canno
 express the high-frequency motion a higher-capacity model fits, so it acts as an
 implicit smoothness prior---and smoother trajectories collide less under
 continuous execution. Reconstruction fidelity is \emph{anti-correlated} with the
-smoothness that drives SR.
+smoothness that drives SR. Adding an explicit smoothness penalty during $n{=}16$
+training (the fifth prior-side lever) recovers only $+3.4\pp$ (peak $59.2\%$ at
+$\lambda{=}0.03$)---still below the $n{=}8$ baseline---confirming that the compact
+basis's \emph{implicit} regularization is what the higher-capacity model lacks.
+
+\begin{proposition}[Compactness bounds trajectory roughness]
+\label{prop:compact}
+For a degree-$d$ B\'ezier joint path $q(t)=\sum_{k=0}^{d} b_k B_{k,d}(t)$ with control
+points $b_k$, the $m$-th derivative satisfies
+$\lVert q^{(m)}\rVert_\infty \le \tfrac{d!}{(d-m)!}\,\max_k \lVert \Delta^m b_k\rVert$,
+where $\Delta^m$ is the $m$-th forward difference. Hence for fixed control-point range,
+a lower degree $d$ imposes a strictly smaller upper bound on velocity/acceleration/jerk:
+the representation \emph{cannot} express high-frequency motion.
+\end{proposition}
+\noindent The bound is standard for B\'ezier hodographs; it makes the mechanism precise
+--- $n{=}8$ ($d{=}7$) caps jerk more tightly than $n{=}16$ ($d{=}15$), matching the
+measured $-22\%$ jerk RMS and the SR gap.
 
 \begin{figure}[t]
 \centering
@@ -265,8 +290,9 @@ dynamic failures, it does not manufacture them.
 \subsection{Lever 1: faithful-collision stitching}
 The stitcher originally certified bridges with the loose AABB intersection-volume
 \emph{proxy}, marking colliding bridges as free. Replacing it with a faithful
-PyBullet check inside RRT-Connect yields \textbf{$+14\pp$} over the proxy plateau,
-the first intervention to move SR.
+PyBullet check inside RRT-Connect yields \textbf{$+17.4\pp$} over the proxy plateau
+($55.5{\pm}1.0\!\to\!72.9{\pm}1.6$; paired CI $[15.2,19.6]$, 5 seeds), the first
+intervention to move SR.
 
 \subsection{Lever 2: trajectory-optimization repair}
 \label{sec:repair}
@@ -294,6 +320,28 @@ Over five seeds, repair raises SR from $72.9{\pm}1.6$ to $81.8{\pm}1.3$: a paire
 optimizer targets a densified static check; the benchmark independently verifies
 dynamic execution, so this is a real executable-SR gain at $\sim$$+1.8$s/scene
 (only on scenes needing repair).
+
+\begin{table}[t]\centering\small
+\caption{Main results: the two feasibility levers stack, on two planners (hybrid 400,
+continuous-execution SR). Every $\Delta$ is paired with a 95\% CI ($^{\dagger}$5 seeds,
+$^{\ddagger}$3 seeds); the prior-side interventions (\S\ref{sec:capacity}--\ref{sec:train})
+by contrast never clear the $\sigma{\approx}1.6\pp$ noise floor.}
+\label{tab:main}
+\begin{tabular}{llcc}
+\toprule
+planner & pipeline & SR\% & $\Delta$ (CI) \\
+\midrule
+\multirow{3}{*}{GPD}
+ & AABB-proxy stitch      & $55.5{\pm}1.0$ & --- \\
+ & \;$+$ faithful stitch$^{\dagger}$  & $72.9{\pm}1.6$ & $+17.4$ $[15.2,19.6]$ \\
+ & \;$+$ trajopt repair$^{\dagger}$   & $\mathbf{81.8{\pm}1.3}$ & $+8.9$ $[7.6,10.2]$ \\
+\midrule
+\multirow{2}{*}{EDMP}
+ & base                   & $57.2{\pm}1.0$ & --- \\
+ & \;$+$ trajopt repair$^{\ddagger}$  & $\mathbf{64.8{\pm}1.3}$ & $+7.6$ $[5.2,9.9]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Is the prior even needed? A naive-seed control}
 \label{sec:naive}
@@ -324,10 +372,10 @@ is not dispensable.
 \label{sec:edmp}
 If the bottleneck is the feasibility machinery, the same repair should help a
 different planner. Applied unchanged to EDMP \cite{edmp2024} (a different model:
-$T{=}255$ over full 50-waypoint trajectories), repair lifts SR from $57.2\%$ to
-$67.5\%$ ($\mathbf{+10.3\pp}$; cubby $+18$, merged $+12$, dresser $+10$)---
-\emph{larger} than the GPD gain and on the same constrained scene types. The lever
-is planner-agnostic.
+$T{=}255$ over full 50-waypoint trajectories), repair lifts SR from
+$57.2{\pm}1.0$ to $64.8{\pm}1.3$ ($\mathbf{+7.6\pp}$, paired CI $[5.2,9.9]$,
+3 seeds)---a significant gain on the same constrained scene types, at
+$\sim$$+7$s/scene. The lever is planner-agnostic.
 
 \subsection{Generalization across datasets}
 \begin{figure}[t]
@@ -383,18 +431,24 @@ checker to serve as the repair oracle. Absent those, the empirical picture is
 stark---five prior-side changes, no gain; two feasibility changes, double-digit
 gains.
 
+\noindent\textbf{On reporting negative results.} Every intervention here is measured
+under one continuous-execution metric with multi-seed confidence intervals and paired
+tests---rigor that lets a null (\S\ref{sec:train}: $5\times$ training, $\Delta{=}{-}0.1\pp$)
+be read as a finding rather than noise, following recent calls for empirical rigor and
+the reporting of negative results \cite{emprobot2024,negresults2024}.
+
 \noindent\textbf{Limitations.} Core results are on hybrid-solvable, balanced 400;
-we generalize the repair lever to global/both splits and to EDMP, but larger $N$
-and more planners would tighten the claim. Absolute SR is below the published GPD
-system; we therefore report deltas within a fixed system rather than cross-method
-absolutes.
+we generalize the repair lever to global/both splits and to EDMP, but larger $N$,
+a second robot embodiment, and a real-robot study would tighten the claim (future work).
+Absolute SR is below the published GPD system; we therefore report deltas within a fixed
+system rather than cross-method absolutes.
 
 \section{Conclusion}
 In a controlled study of guided polynomial diffusion planning, the generative
 prior is not the bottleneck: five natural prior improvements never raise SR while
 improving nominal metrics, and a $5\times$ prior changes nothing. The gains live in
-the feasibility machinery---faithful-collision stitching ($+14\pp$) and
-trajectory-optimization repair ($+8.9\pp$ on GPD, $+10.3\pp$ on EDMP)---which also
+the feasibility machinery---faithful-collision stitching ($+17.4\pp$) and
+trajectory-optimization repair ($+8.9\pp$ on GPD, $+7.6\pp$ on EDMP)---which also
 collapses the diagnosed swept-collision failure. The prior earns its place as a
 necessary initializer, not as a tunable lever. We release the implementation and
 all ablations to support feasibility-centric research on diffusion planners.
@@ -549,13 +603,17 @@ objective-fidelity$\perp$SR decoupling seen for the noise schedule, capacity, an
 exact sphere-SDF objective (App.~\ref{app:sphere}). Continuous feasibility is worth
 \emph{measuring} and \emph{repairing}, but not worth a heavier objective.
 
-\noindent\textbf{The audit generalizes across datasets and planners.}
-Fig.~\ref{fig:auditcross}: the waypoint$\to$dense success gap is universal --- base GPD
-loses $27/18/21\pp$ on global/hybrid/both, and EDMP loses $10\pp$ on hybrid --- and in
-every case repair flattens the curve and dynamic execution tracks the dense static
-check. This makes the audit a general evaluation-rigor prescription: learned planners
-should report success at a stated continuous-check resolution (classical planners
-already do \cite{rrtconnect2000}), not at the waypoints alone.
+\noindent\textbf{The audit generalizes across datasets, and is representation-dependent
+across planners.} Fig.~\ref{fig:auditcross} (mean$\pm$std over seeds): base GPD's
+waypoint$\to$dense gap is large and significant on all three splits ---
+$25.0{\pm}1.7$ / $17.4{\pm}2.6$ / $20.3{\pm}1.2\pp$ on global/hybrid/both. For EDMP,
+whose longer diffusion chain acts on full 50-waypoint trajectories (denser inter-waypoint
+motion), the gap is small and not significant ($4.2{\pm}5.2\pp$) --- so the
+over-reporting is most acute for compact bases like GPD's degree-7 B\'ezier. In every
+case repair flattens the curve and dynamic execution tracks the dense static check. This
+makes the audit a general evaluation-rigor prescription: learned planners should report
+success at a stated continuous-check resolution (classical planners already do
+\cite{rrtconnect2000}), not at the waypoints alone.
 
 \begin{figure*}[t]
 \centering
@@ -567,10 +625,30 @@ dense static check). The waypoint$\to$dense over-reporting is $10$--$27\pp$.}
 \label{fig:auditcross}
 \end{figure*}
 
-\subsection{Can the feasibility lever be shortcut? Two more negative levers}
+\subsection{Can the feasibility lever be shortcut? A survey of negative levers}
 \label{app:levers}
-Beyond a denser objective, we tested two literature-motivated ways to improve/replace
-the stitch$+$trajopt machinery. Both fail to beat it, reinforcing that it is the lever.
+We tested six literature-motivated ways to improve or replace the stitch$+$trajopt
+machinery. None significantly exceeds plain oracle-gated repair
+(Table~\ref{tab:levers}); the three we have not yet detailed are below.
+
+\begin{table}[t]\centering\small
+\caption{Every attempt to improve or shortcut the feasibility machinery, vs.\ the
+oracle-gated trajopt-repair baseline ($81.8{\pm}1.3$, hybrid 400). No lever clears it
+significantly. ``$\Delta$'' is paired; $^{\dagger}$5 seeds, $^{\ddagger}$3 seeds.}
+\label{tab:levers}
+\begin{tabular}{lccl}
+\toprule
+lever & SR\% & $\Delta$ vs.\ repair & verdict \\
+\midrule
+denser repair objective ($S{=}4$)$^{\dagger}$ & $81.7$ & $-0.15$ & tie \\
+exact sphere-SDF objective$^{\ddagger}$        & $82.0$ & $+0.58$ & tie (n.s.) \\
+sphere-SDF \emph{guidance}$^{\dagger}$          & $\sim$76 & $\sim{-}6$ & worse \\
+verifier best-of-$K$ ($K{=}128$)$^{\dagger}$    & $83.5$ & $+1.65$ & tie (n.s.) \\
+learned amortized repair$^{\dagger}$            & $64.2$ & $-17.6$ & worse \\
+SMC particle steering$^{\dagger}$               & $80.8$ & $-1.0$  & tie (n.s.) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \noindent\textbf{Verifier-guided selection (best-of-$K$ by the faithful oracle).} Since
 the faithful PyBullet oracle---not the differentiable cost---gates success, we select
@@ -606,12 +684,57 @@ warm-start hybrid reaches only $75.6\pm1.8$ ($<$ the $81.8$ trajopt baseline) at
 lower latency. Distillation from this data budget does not generalize; the iterative
 oracle-gated optimization remains necessary.
 
-\noindent\textbf{Synthesis.} Across four attempts to improve or shortcut the feasibility
-machinery --- denser continuous objective, exact sphere-SDF objective/guidance,
-verifier-guided selection, and learned amortized repair --- none significantly exceeds
-plain oracle-gated trajopt repair. The lever is robust; the returns are in \emph{using}
+\noindent\textbf{Oracle-in-the-loop SMC steering.} We also steer the reverse diffusion as a particle filter: in the chain's second half we resample the $K$ particles by a sphere-SDF feasibility potential (Feynman-Kac / twisted-SMC steering), concentrating them in feasible modes as they form. This too fails: $-3.2\pp$ on the base pipeline (5 seeds; resampling collapses the candidate diversity RRT-stitch needs) and a non-significant $-1.0\pp$ with trajopt. 
+
+\noindent\textbf{Synthesis.} Across six attempts to improve or shortcut the feasibility
+machinery (Table~\ref{tab:levers}) --- denser continuous objective, exact sphere-SDF
+objective, sphere-SDF guidance, verifier-guided selection, learned amortized repair, and
+SMC particle steering --- none significantly exceeds plain oracle-gated trajopt repair. The lever is robust; the returns are in \emph{using}
 the faithful oracle inside stitch/repair, not in a heavier objective, a cleverer
 selector, or a distilled shortcut.
+
+\subsection{Positioning vs.\ published systems}
+\label{app:positioning}
+Table~\ref{tab:position} places our within-system results next to published numbers.
+We never compare across the two blocks as a claim: our absolute SR sits $\sim$21\pp{}
+below the published GPD system (App.~\ref{app:repro} attributes this to the unreleased
+7-cost guidance ensemble and trained weights, not to under-training or our repair). The
+table's purpose is orientation---GPD$+$repair is fast and repair-dominated, EDMP is an
+order of magnitude slower, and classical cuRobo occupies a different speed/quality point.
+
+\begin{table}[t]\centering\small
+\caption{Positioning. \emph{Top}: our re-implementation (within-system, comparable).
+\emph{Bottom}: published numbers under each paper's own protocol (\emph{reference only};
+not directly comparable---different collision checks, scene draws, and unreleased
+weights).}
+\label{tab:position}
+\begin{tabular}{llcc}
+\toprule
+& system & SR\% & time \\
+\midrule
+\multirow{3}{*}{ours}
+ & GPD (stitched)      & $72.9{\pm}1.6$ & $7.6$s \\
+ & GPD $+$ repair      & $81.8{\pm}1.3$ & $9.4$s \\
+ & EDMP $+$ repair     & $64.8{\pm}1.3$ & $\sim$51s \\
+\midrule
+\multirow{3}{*}{\shortstack[l]{published\\(ref.)}}
+ & GPD \cite{gpd2025}       & $92.8$ & $1.9$s \\
+ & M$\pi$Nets \cite{mpinets2022} & $75.8$ & --- \\
+ & cuRobo \cite{curobo2023} & $\sim$99 & $\sim$0.1s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Released benchmark and audit protocol}
+\label{app:release}
+To make the study reusable, we release: (i) the GPU-native GPD/EDMP re-implementation
+with all ablation configs; (ii) the balanced 400-scene hybrid evaluation set (and the
+global/both splits) with the continuous-execution success metric; and (iii) the
+\emph{continuous-feasibility audit protocol}---the SR@$R$ harness (\S\ref{app:continuous})
+that measures how much reported success survives a dense collision check, plus the
+oracle-gated repair module. The audit is a drop-in evaluation any learned planner can
+run; we recommend reporting SR at a stated check resolution rather than at waypoints
+alone, matching classical practice \cite{rrtconnect2000}.
 
 \small
 \bibliographystyle{plain}

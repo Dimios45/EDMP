@@ -74,6 +74,8 @@ GPD_SEED        = None    # multi-seed CIs: RNG seed for diffusion sampling (Non
 NAIVE_SEED      = None     # control: replace diffusion prior w/ 'linear' seed, same downstream
 SPHERE_COST     = False    # Sphere-SDF (oriented-box) repair objective vs AABB proxy
 SPHERE_GUIDANCE = False    # sphere-SDF gradient as the diffusion guidance signal (reproduction study)
+SMC_EVERY       = 0       # SMC particle steering: resample every N steps in 2nd half of chain (0=off)
+SMC_TEMP        = 1.0     # SMC softmax temperature on sphere-SDF penetration potential
 REPAIR_EDGE_SAMPLES = 1  # continuous-repair: sub-configs sampled per edge (1=midpoint)
 ORACLE_SELECT   = False   # verifier: pick best-of-K candidate by faithful oracle (not guide cost)
 SAVE_REPAIR_PAIRS = False # emit (seed -> repaired) trajectory pairs for learned-repair training
@@ -150,6 +152,11 @@ def get_worker_indices(cap, worker_id, num_workers):
 # ── EDMP worker ────────────────────────────────────────────────────────────────
 
 def run_edmp_worker(dataset, env, caps, worker_id, num_workers, out_path):
+    if GPD_SEED is not None:
+        s = GPD_SEED + worker_id
+        torch.manual_seed(s); np.random.seed(s)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(s)
     diffuser   = Diffusion(T=EDMP_T, device=DEVICE)
     model_name = EDMP_MODEL_DIR + f'TemporalUNetModel{EDMP_T}_N{EDMP_TRAJ_LEN}'
     denoiser   = TemporalUNet(model_name=model_name, input_dim=7, time_dim=32,
@@ -288,6 +295,7 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
                 trajs = seed[None]                                  # (1, 7, traj_len)
             else:
                 sph_guide = SphereSDFCost(guide, DEVICE) if SPHERE_GUIDANCE else None
+                smc_c = SphereSDFCost(guide, DEVICE) if SMC_EVERY > 0 else None
                 trajs = diffuser.denoise_guided_poly(
                     model=denoiser, guide=guide, num_channels=7,
                     guidance_schedule=guide_cfgs['guidance_schedule'],
@@ -296,7 +304,8 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
                     extra_candidate_steps=GPD_EXTRA_STEPS,
                     smoothness_weight=GPD_SMOOTHNESS,
                     scene_obs=sc_obs, scene_mask=sc_mask, cfg_weight=GPD_CFG_WEIGHT,
-                    sphere_cost=sph_guide)
+                    sphere_cost=sph_guide,
+                    smc_cost=smc_c, smc_every=SMC_EVERY, smc_temp=SMC_TEMP)
 
             # Spawn obstacles before stitch so a PyBullet collision checker (if
             # used) sees them; harmless for the AABB/no-stitch paths.
@@ -429,6 +438,10 @@ def main():
                         help='select best-of-K candidate by the faithful PyBullet oracle')
     parser.add_argument('--learned_repair', action='store_true',
                         help='C: one-shot learned repair operator (models/LearnedRepair)')
+    parser.add_argument('--smc_every', type=int, default=None,
+                        help='SMC particle steering: resample every N denoising steps (0=off)')
+    parser.add_argument('--smc_temp', type=float, default=None,
+                        help='SMC softmax temperature on the sphere-SDF potential')
     parser.add_argument('--save_repair_pairs', action='store_true',
                         help='log (seed -> trajopt-repaired) pairs to results/repair_pairs/')
     parser.add_argument('--variance_thresh', type=float, default=None,
@@ -440,7 +453,7 @@ def main():
         args.out = f'results/{args.method}_w{args.worker_id}.json'
 
     # ---- Apply GPD config overrides (module globals read by run_gpd_worker) ----
-    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST, SPHERE_GUIDANCE, REPAIR_EDGE_SAMPLES, ORACLE_SELECT, SAVE_REPAIR_PAIRS, LEARNED_REPAIR
+    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST, SPHERE_GUIDANCE, REPAIR_EDGE_SAMPLES, ORACLE_SELECT, SAVE_REPAIR_PAIRS, LEARNED_REPAIR, SMC_EVERY, SMC_TEMP
     if args.guides is not None:
         GPD_GUIDES = [int(g) for g in args.guides.split(',')]
     if args.batch_per is not None:
@@ -485,6 +498,10 @@ def main():
         SPHERE_GUIDANCE = True
     if args.repair_edge_samples is not None:
         REPAIR_EDGE_SAMPLES = args.repair_edge_samples
+    if args.smc_every is not None:
+        SMC_EVERY = args.smc_every
+    if args.smc_temp is not None:
+        SMC_TEMP = args.smc_temp
     if args.learned_repair:
         LEARNED_REPAIR = True
     if args.oracle_select:

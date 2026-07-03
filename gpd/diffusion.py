@@ -40,7 +40,9 @@ class PolynomialDiffusion(Diffusion):
                             scene_obs: np.ndarray = None,
                             scene_mask: np.ndarray = None,
                             cfg_weight: float = 1.0,
-                            sphere_cost=None) -> np.ndarray:
+                            sphere_cost=None,
+                            smc_cost=None, smc_every: int = 0,
+                            smc_temp: float = 1.0) -> np.ndarray:
         """
         GPU-native guided denoising in Bernstein control-point space.
 
@@ -186,6 +188,18 @@ class PolynomialDiffusion(Diffusion):
                 if condition:
                     alpha_t[:, :, 0]  = start_t
                     alpha_t[:, :, -1] = goal_t
+
+            # ----- SMC / particle steering: resample the K particles by a feasibility
+            # potential (sphere-SDF penetration, GPU-cheap) in the second half of the
+            # reverse chain, concentrating candidates in feasible modes as they form. -----
+            if smc_cost is not None and smc_every > 0 and t <= self.T // 2 \
+                    and t >= 4 and (t % smc_every == 0) and batch_size > 1:
+                with torch.no_grad():
+                    q = torch.clamp(alpha_t @ B_gpu.T, lower[:, None], upper[:, None])
+                    pen = smc_cost.cost(q, t=0, batch_size=batch_size).sum(dim=1)  # (K,)
+                    w = torch.softmax(-pen / max(smc_temp, 1e-6), dim=0)
+                    idx = torch.multinomial(w, batch_size, replacement=True)
+                    alpha_t = alpha_t[idx].contiguous()
 
             # GPD-stitched: collect candidate trajectories from the last few steps
             if extra_candidate_steps > 0 and t <= extra_candidate_steps:
