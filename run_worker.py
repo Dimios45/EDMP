@@ -27,7 +27,7 @@ from datasets.load_test_dataset import TestDataset
 from diffusion.models.temporalunet import TemporalUNet as TemporalUNetGPD
 from gpd.diffusion import PolynomialDiffusion
 from gpd.conditional_unet import ConditionalTemporalUNet
-from gpd.stitch    import stitch
+from gpd.stitch    import stitch, rrt_connect
 from gpd.refine    import trajopt_refine
 from gpd.sphere_collision import SphereSDFCost
 from gpd.select import oracle_select, resample_to
@@ -76,6 +76,9 @@ SPHERE_COST     = False    # Sphere-SDF (oriented-box) repair objective vs AABB 
 SPHERE_GUIDANCE = False    # sphere-SDF gradient as the diffusion guidance signal (reproduction study)
 SMC_EVERY       = 0       # SMC particle steering: resample every N steps in 2nd half of chain (0=off)
 SMC_TEMP        = 1.0     # SMC softmax temperature on sphere-SDF penetration potential
+RRT_FALLBACK    = False   # completeness fallback: RRT-Connect solve when the learned plan fails
+RRT_FB_ITERS    = 2000    # RRT-Connect iteration budget for the fallback solve
+RRT_FB_DENSIFY  = 4       # densification factor for the RRT fallback path
 REPAIR_EDGE_SAMPLES = 1  # continuous-repair: sub-configs sampled per edge (1=midpoint)
 ORACLE_SELECT   = False   # verifier: pick best-of-K candidate by faithful oracle (not guide cost)
 SAVE_REPAIR_PAIRS = False # emit (seed -> repaired) trajectory pairs for learned-repair training
@@ -345,6 +348,22 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
             t_c = time.time(); plan_t = t_c - t0
 
             success  = int(env.benchmark_trajectory(traj))
+
+            # Completeness fallback: if the learned plan would still fail, solve the
+            # scene from scratch with RRT-Connect against the faithful oracle. On
+            # solvable scenes a complete planner catches most learned-planner misses.
+            used_fallback = 0
+            if RRT_FALLBACK and not success:
+                path = rrt_connect(start_j, goal_j, guide, DEVICE,
+                                   max_iter=RRT_FB_ITERS, seed=int(i),
+                                   collision_fn=env.configs_free)
+                if path is not None and len(path) >= 2:
+                    rtraj = np.clip(densify(np.stack(path).T, RRT_FB_DENSIFY),
+                                    lower[:, None], upper[:, None])
+                    if int(env.benchmark_trajectory(rtraj)):
+                        traj, success, used_fallback = rtraj, 1, 1
+            t_c2 = time.time()
+            plan_t = t_c2 - t0
             t_success += success
 
             if SAVE_REPAIR_PAIRS and USE_TRAJOPT:
@@ -358,7 +377,7 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
             r = {'scene_type': scene_type, 'scene_num': i,
                  'success': success, 'plan_time': round(plan_t, 3),
                  't_diffuse': round(t_a - t0, 3), 't_select': round(t_b - t_a, 3),
-                 't_repair': round(t_c - t_b, 3)}
+                 't_repair': round(t_c - t_b, 3), 'fallback': used_fallback}
             scene_results.append(r)
             print(f"  [W{worker_id}][{scene_type}:{i+1:4d}]  success={success}  "
                   f"SR={t_success}/{len(scene_results)}  t={plan_t:.2f}s", flush=True)
@@ -436,6 +455,10 @@ def main():
                         help='continuous-repair: sub-configs per edge in the trajopt objective (1=midpoint)')
     parser.add_argument('--oracle_select', action='store_true',
                         help='select best-of-K candidate by the faithful PyBullet oracle')
+    parser.add_argument('--rrt_fallback', action='store_true',
+                        help='completeness fallback: RRT-Connect solve when the learned plan fails')
+    parser.add_argument('--rrt_fb_iters', type=int, default=None,
+                        help='RRT-Connect iteration budget for the fallback solve')
     parser.add_argument('--learned_repair', action='store_true',
                         help='C: one-shot learned repair operator (models/LearnedRepair)')
     parser.add_argument('--smc_every', type=int, default=None,
@@ -453,7 +476,7 @@ def main():
         args.out = f'results/{args.method}_w{args.worker_id}.json'
 
     # ---- Apply GPD config overrides (module globals read by run_gpd_worker) ----
-    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST, SPHERE_GUIDANCE, REPAIR_EDGE_SAMPLES, ORACLE_SELECT, SAVE_REPAIR_PAIRS, LEARNED_REPAIR, SMC_EVERY, SMC_TEMP
+    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST, SPHERE_GUIDANCE, REPAIR_EDGE_SAMPLES, ORACLE_SELECT, SAVE_REPAIR_PAIRS, LEARNED_REPAIR, SMC_EVERY, SMC_TEMP, RRT_FALLBACK, RRT_FB_ITERS
     if args.guides is not None:
         GPD_GUIDES = [int(g) for g in args.guides.split(',')]
     if args.batch_per is not None:
@@ -502,6 +525,10 @@ def main():
         SMC_EVERY = args.smc_every
     if args.smc_temp is not None:
         SMC_TEMP = args.smc_temp
+    if args.rrt_fallback:
+        RRT_FALLBACK = True
+    if args.rrt_fb_iters is not None:
+        RRT_FB_ITERS = args.rrt_fb_iters
     if args.learned_repair:
         LEARNED_REPAIR = True
     if args.oracle_select:
