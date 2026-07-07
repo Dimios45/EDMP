@@ -79,6 +79,9 @@ SMC_TEMP        = 1.0     # SMC softmax temperature on sphere-SDF penetration po
 RRT_FALLBACK    = False   # completeness fallback: RRT-Connect solve when the learned plan fails
 RRT_FB_ITERS    = 2000    # RRT-Connect iteration budget for the fallback solve
 RRT_FB_DENSIFY  = 4       # densification factor for the RRT fallback path
+RRT_FB_TRIGGER_R = 8      # densification for the plan-time static feasibility gate
+RRT_FB_TIME     = 10.0    # wall-clock timeout (s) on the RRT fallback solve
+FB_TRIGGER      = 'static'  # 'static' (honest, deploy-available check) or 'exec' (cheat: peeks at grader)
 REPAIR_EDGE_SAMPLES = 1  # continuous-repair: sub-configs sampled per edge (1=midpoint)
 ORACLE_SELECT   = False   # verifier: pick best-of-K candidate by faithful oracle (not guide cost)
 SAVE_REPAIR_PAIRS = False # emit (seed -> repaired) trajectory pairs for learned-repair training
@@ -91,6 +94,13 @@ def _lr_model(device):
     if 'm' not in _LR_CACHE:
         _LR_CACHE['m'] = LearnedRepair().load(device).to(device).eval()
     return _LR_CACHE['m']
+
+
+def _static_free(env, traj, R):
+    """Plan-time static feasibility: densified faithful collision *query* (a
+    deploy-available planning primitive, NOT the dynamic execution grader)."""
+    cfgs = densify(traj, R).T if R > 1 else traj.T
+    return bool(env.configs_free(cfgs).all())
 
 GUIDE_PATH     = './guides/'
 T_ORIG         = 255
@@ -202,10 +212,30 @@ def run_edmp_worker(dataset, env, caps, worker_id, num_workers, out_path):
                                       edge_samples=REPAIR_EDGE_SAMPLES, collision_fn=cfn)
                 traj = np.clip(traj, el[:, None], eu[:, None])
                 plan_t = time.time() - t0
+
+            # Cross-planner completeness fallback (same honest static-gate logic as GPD).
+            used_fallback = 0
+            if RRT_FALLBACK:
+                el = np.array([-166,-101,-166,-176,-166,-1,-166], np.float32)*(np.pi/180)
+                eu = np.array([166,101,166,-4,166,215,166], np.float32)*(np.pi/180)
+                fail = (not int(env.benchmark_trajectory(traj))) if FB_TRIGGER == 'exec' \
+                       else (not _static_free(env, traj, RRT_FB_TRIGGER_R))
+                if fail:
+                    path = rrt_connect(start_j, goal_j, guide, DEVICE,
+                                       max_iter=RRT_FB_ITERS, seed=int(i),
+                                       collision_fn=env.configs_free, max_time=RRT_FB_TIME)
+                    if path is not None and len(path) >= 2:
+                        rtraj = np.clip(densify(np.stack(path).T, RRT_FB_DENSIFY),
+                                        el[:, None], eu[:, None])
+                        ok = int(env.benchmark_trajectory(rtraj)) if FB_TRIGGER == 'exec' \
+                             else _static_free(env, rtraj, RRT_FB_TRIGGER_R)
+                        if ok:
+                            traj, used_fallback = rtraj, 1
+                plan_t = time.time() - t0
             success  = int(env.benchmark_trajectory(traj))
             t_success += success
 
-            r = {'scene_type': scene_type, 'scene_num': i,
+            r = {'scene_type': scene_type, 'scene_num': i, 'fallback': used_fallback,
                  'success': success, 'plan_time': round(plan_t, 3)}
             scene_results.append(r)
             print(f"  [W{worker_id}][{scene_type}:{i+1:4d}]  success={success}  "
@@ -345,25 +375,33 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
                                       edge_samples=REPAIR_EDGE_SAMPLES,
                                       cost_obj=cobj, collision_fn=cfn)
                 traj = np.clip(traj, lower[:, None], upper[:, None])
-            t_c = time.time(); plan_t = t_c - t0
+            t_c = time.time()
 
-            success  = int(env.benchmark_trajectory(traj))
-
-            # Completeness fallback: if the learned plan would still fail, solve the
-            # scene from scratch with RRT-Connect against the faithful oracle. On
-            # solvable scenes a complete planner catches most learned-planner misses.
+            # Completeness fallback: if the committed plan fails a plan-time static
+            # feasibility gate, solve the scene from scratch with RRT-Connect (a complete
+            # planner). The trigger + acceptance use the static collision *query*
+            # (deploy-available), never the dynamic execution grader. On solvable scenes
+            # this catches most learned-planner misses.
             used_fallback = 0
-            if RRT_FALLBACK and not success:
-                path = rrt_connect(start_j, goal_j, guide, DEVICE,
-                                   max_iter=RRT_FB_ITERS, seed=int(i),
-                                   collision_fn=env.configs_free)
-                if path is not None and len(path) >= 2:
-                    rtraj = np.clip(densify(np.stack(path).T, RRT_FB_DENSIFY),
-                                    lower[:, None], upper[:, None])
-                    if int(env.benchmark_trajectory(rtraj)):
-                        traj, success, used_fallback = rtraj, 1, 1
+            if RRT_FALLBACK:
+                fail = (not int(env.benchmark_trajectory(traj))) if FB_TRIGGER == 'exec' \
+                       else (not _static_free(env, traj, RRT_FB_TRIGGER_R))
+                if fail:
+                    path = rrt_connect(start_j, goal_j, guide, DEVICE,
+                                       max_iter=RRT_FB_ITERS, seed=int(i),
+                                       collision_fn=env.configs_free, max_time=RRT_FB_TIME)
+                    if path is not None and len(path) >= 2:
+                        rtraj = np.clip(densify(np.stack(path).T, RRT_FB_DENSIFY),
+                                        lower[:, None], upper[:, None])
+                        ok = int(env.benchmark_trajectory(rtraj)) if FB_TRIGGER == 'exec' \
+                             else _static_free(env, rtraj, RRT_FB_TRIGGER_R)
+                        if ok:
+                            traj, used_fallback = rtraj, 1
             t_c2 = time.time()
             plan_t = t_c2 - t0
+
+            # Final scoring: dynamic execution, run ONCE on the committed plan.
+            success = int(env.benchmark_trajectory(traj))
             t_success += success
 
             if SAVE_REPAIR_PAIRS and USE_TRAJOPT:
@@ -377,7 +415,8 @@ def run_gpd_worker(dataset, env, caps, worker_id, num_workers, out_path):
             r = {'scene_type': scene_type, 'scene_num': i,
                  'success': success, 'plan_time': round(plan_t, 3),
                  't_diffuse': round(t_a - t0, 3), 't_select': round(t_b - t_a, 3),
-                 't_repair': round(t_c - t_b, 3), 'fallback': used_fallback}
+                 't_repair': round(t_c - t_b, 3), 'fallback': used_fallback,
+                 't_fallback': round(t_c2 - t_c, 3)}
             scene_results.append(r)
             print(f"  [W{worker_id}][{scene_type}:{i+1:4d}]  success={success}  "
                   f"SR={t_success}/{len(scene_results)}  t={plan_t:.2f}s", flush=True)
@@ -459,6 +498,12 @@ def main():
                         help='completeness fallback: RRT-Connect solve when the learned plan fails')
     parser.add_argument('--rrt_fb_iters', type=int, default=None,
                         help='RRT-Connect iteration budget for the fallback solve')
+    parser.add_argument('--fb_trigger', default=None, choices=['static', 'exec'],
+                        help="fallback trigger: 'static' (honest plan-time gate) or 'exec' (cheat: peeks at grader)")
+    parser.add_argument('--rrt_fb_trigger_r', type=int, default=None,
+                        help='densification for the plan-time static feasibility gate')
+    parser.add_argument('--rrt_fb_time', type=float, default=None,
+                        help='wall-clock timeout (s) on the RRT fallback solve')
     parser.add_argument('--learned_repair', action='store_true',
                         help='C: one-shot learned repair operator (models/LearnedRepair)')
     parser.add_argument('--smc_every', type=int, default=None,
@@ -476,7 +521,7 @@ def main():
         args.out = f'results/{args.method}_w{args.worker_id}.json'
 
     # ---- Apply GPD config overrides (module globals read by run_gpd_worker) ----
-    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST, SPHERE_GUIDANCE, REPAIR_EDGE_SAMPLES, ORACLE_SELECT, SAVE_REPAIR_PAIRS, LEARNED_REPAIR, SMC_EVERY, SMC_TEMP, RRT_FALLBACK, RRT_FB_ITERS
+    global GPD_GUIDES, GPD_BATCH_PER, USE_STITCH, USE_RRT, USE_PB_COLLISION, GPD_MODEL_DIR, GPD_VAR_THRESH, GPD_EXTRA_STEPS, GPD_GUIDANCE_SCALE, GPD_N_CONTROL, GPD_SMOOTHNESS, GPD_CONDITIONAL, GPD_CFG_WEIGHT, USE_TRAJOPT, TRAJOPT_ITERS, TRAJOPT_DENSIFY, TRAJOPT_MID_W, GPD_SEED, NAIVE_SEED, SPHERE_COST, SPHERE_GUIDANCE, REPAIR_EDGE_SAMPLES, ORACLE_SELECT, SAVE_REPAIR_PAIRS, LEARNED_REPAIR, SMC_EVERY, SMC_TEMP, RRT_FALLBACK, RRT_FB_ITERS, RRT_FB_TRIGGER_R, RRT_FB_TIME, FB_TRIGGER
     if args.guides is not None:
         GPD_GUIDES = [int(g) for g in args.guides.split(',')]
     if args.batch_per is not None:
@@ -529,6 +574,12 @@ def main():
         RRT_FALLBACK = True
     if args.rrt_fb_iters is not None:
         RRT_FB_ITERS = args.rrt_fb_iters
+    if args.fb_trigger is not None:
+        FB_TRIGGER = args.fb_trigger
+    if args.rrt_fb_trigger_r is not None:
+        RRT_FB_TRIGGER_R = args.rrt_fb_trigger_r
+    if args.rrt_fb_time is not None:
+        RRT_FB_TIME = args.rrt_fb_time
     if args.learned_repair:
         LEARNED_REPAIR = True
     if args.oracle_select:

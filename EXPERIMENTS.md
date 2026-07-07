@@ -151,6 +151,12 @@ See **REPLICATION.md** for the step-by-step log. Final 3×3 (ours / paper):
 
 **Avg −21 pp.** Method + ordering (GPD-stitched>7G>1G) replicate; absolute SR does not. Gap is ~half tunable (K=32→128 +6 pp; 2× guidance +4.5 pp) and ~half model-weights/guide-tuning. Faithful-collision RRT stitching is the proven +13–14 pp win; candidate-pool diversity / longer training / noise-schedule recalibration all tested and don't help.
 
+### 4g. Multi-seed rigor + SOTA-competitive completeness fallback (honest)
+Follow-up program (`experiments/rigor_ci.sh`, `experiments/fallback_ablation.sh`, `rrt_only.py`; stats in `results/rigor_ci_stats.json`, `results/fallback_ablation_stats.json`).
+- **CI'd levers** (correcting earlier single-run): faithful stitch **+17.4 pp** [15.2,19.6]; EDMP repair **+7.6 pp** [5.2,9.9]. 12-guide ensemble is a *dud* on GPD (72.1±1.5 ≈ 1-guide).
+- **Completeness fallback** (`--rrt_fallback`): hand the residual to RRT-Connect under a **plan-time static `configs_free` gate** (NOT the execution grader — de-cheated from an earlier version that peeked at `benchmark_trajectory`). **90.0±0.7%** (5 seeds, hybrid), SOTA-competitive vs 92.8. Honest static trigger ≈ grader-peeking (90.0 vs 90.3) because dynamic≈dense-static.
+- **Attribution:** RRT-only from scratch **67.0%** → not "just RRT"; learned prior +11 pp, repair +5 pp; full stack fires RRT on only ~34/400 scenes. **Time:** median 7.1s, p95 ~21s, max ~27s (10s RRT timeout). **Generalizes:** global 81.3 / both 89.3 / EDMP 84.5.
+
 ## 5. Key findings
 1. **Training duration is not the bottleneck** (+2.8 pp for 10×).
 2. **single-guide GPD reproduces to ~10 pp** with the correct single-guide best-of-K config.

@@ -108,6 +108,8 @@ Hybrid: single-guide GPD 57.8 / 7-guide GPD 63.8 / GPD-stitched 71.2 (paper 72.9
 
 **Bottom line:** the GPD *method* is validated and reproduces qualitatively; closing the absolute gap needs (a) larger K + stronger/retuned guidance, and ideally (b) the paper's guide configs + checkpoint. Realistically, exact replication isn't reachable without the original code/weights, but the gap is now fully characterized and ~half of it is closable with tuning we've demonstrated.
 
+**UPDATE (SOTA-competitive, feasibility-side):** rather than chase the prior-side gap, stacking inference-time feasibility levers closes it. GPD (1-guide) + trajopt repair + a **completeness fallback** (RRT-Connect on the residual, triggered by a *plan-time static feasibility gate* — NOT the execution grader) reaches **90.0±0.7%** on hybrid (5 seeds), within the CI of the published 92.8%. Attribution: RRT-only alone is 67% — the learned prior (+11pp) and repair (+5pp) carry it. The 12-guide ensemble does NOT help (dud). See EXPERIMENTS.md §4g and `results/fallback_ablation_stats.json`.
+
 ## Learnings & Improvements (prioritized)
 1. **⭐ Faithful-collision RRT stitching — the proven, novel win (+13–14 pp).** Use true PyBullet/mesh collision (not the AABB proxy) inside the stitcher. Next: GPU-batched sphere-model collision to make it fast at scale. *(Implemented.)*
 2. **Guide retuning for T=64 + larger K + stronger guidance.** Recovers most of the base-planner gap (Step 4 evidence). Cheap, high-value; should precede any model changes.

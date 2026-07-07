@@ -17,6 +17,7 @@ If RRT-Connect fails for a bridge it falls back to the linear bridge.
 Invariant: current_waypoint always strictly increases -> guaranteed termination.
 """
 
+import time
 import numpy as np
 import torch
 
@@ -107,13 +108,15 @@ def _trace(nodes, parents, idx):
 
 def rrt_connect(q_start: np.ndarray, q_goal: np.ndarray, guide, device: str,
                 step: float = 0.3, res: float = 0.1, max_iter: int = 400,
-                seed: int = 0, collision_fn=None):
+                seed: int = 0, collision_fn=None, max_time: float = None):
     """
     Bidirectional RRT-Connect between two collision-free configs.
 
     Returns a list of configs [q_start, ..., q_goal] (collision-free, oriented
-    start->goal) or None if no connection was found within max_iter.
+    start->goal) or None if no connection was found within max_iter (or max_time
+    seconds of wall-clock, if given -- bounds the solve-time tail).
     """
+    t_start = time.time()
     # Fast path: direct straight line is already free.
     if _edge_free(q_start, q_goal, guide, device, res, collision_fn):
         return [q_start, q_goal]
@@ -148,6 +151,8 @@ def rrt_connect(q_start: np.ndarray, q_goal: np.ndarray, guide, device: str,
     a_is_start = True
 
     for _ in range(max_iter):
+        if max_time is not None and (time.time() - t_start) > max_time:
+            return None
         q_rand = rng.uniform(_LOWER, _UPPER).astype(np.float32)
         sA, iA = extend(A_nodes, A_par, q_rand)
         if sA != 'trapped':

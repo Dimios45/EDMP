@@ -151,6 +151,13 @@ Each is framed as: **hypothesis → method → experiment → expected impact �
   - **Trajopt repair = +10.2pp** (cubby +20, dresser +10, merged +11). The **first** lever besides faithful stitching to move SR, and it breaks the ~72% plateau that resisted schedule/conditioning/capacity. Cost: +~1.8s/scene, only on failing scenes (early-stops when edge-free).
 - **Next:** extend to global/both datasets + larger N; ablate out_densify / midpoint cost / iters; report time/accuracy Pareto.
 
+### Completeness fallback *(✅✅✅ VALIDATED — SOTA-competitive 90.0%, honest + attributed)*
+- **Idea:** hand the post-repair residual to a complete planner (RRT-Connect) when the committed plan fails a **plan-time static feasibility gate** (`configs_free` on the densified plan — deploy-available, *not* the execution grader; earlier version cheated by peeking at `benchmark_trajectory`, now fixed via `--fb_trigger static`).
+- **✅ RESULT (hybrid, 5 seeds):** **90.0±0.7%**, within the CI of published GPD (92.8). Honest trigger ≈ grader-peeking (90.0 vs 90.3) since dynamic≈dense-static (the audit).
+- **Attribution (not "just RRT"):** RRT-only from scratch **67.0%**; learned prior +11pp, repair +5pp; full stack fires RRT on only ~34/400 scenes. Time median 7.1s / p95 ~21s / max ~27s. Generalizes: global 81.3 / both 89.3 / EDMP 84.5.
+- **Caveat:** reaches ~90% because scenes are solvable-by-construction; contribution is the *allocation* (smooth learned+repair on the easy majority, complete planner on the hard tail). See EXPERIMENTS.md §4g.
+- **Dud:** 12-guide ensemble-of-costs does NOT help GPD (72.1±1.5 ≈ 1-guide).
+
 ## 4. Paper plan
 
 **Working title:** *"The Prior Is Not the Bottleneck: Where Success Actually Comes From in Guided Diffusion Motion Planning."*

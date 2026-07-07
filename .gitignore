@@ -32,3 +32,7 @@ paper_audit/*.log
 paper_audit/*.bbl
 paper_audit/*.blg
 paper_audit/*.out
+results/fbA_*/
+results/fbB_*/
+results/fbC_*/
+results/fbD_*/

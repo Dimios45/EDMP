@@ -1,0 +1,89 @@
+{
+  "partA_honesty": {
+    "static_5seed": [
+      90.0,
+      0.69
+    ],
+    "exec_cheat_3seed": [
+      90.3,
+      1.4
+    ],
+    "rtrig_sweep": {
+      "R1": 89.5,
+      "R8": 90.8,
+      "R32": 91.0
+    }
+  },
+  "partB_attribution": {
+    "rrt_only": 67.0,
+    "linear+repair+fb": [
+      78.9,
+      1.28
+    ],
+    "diffusion+fb_norepair": [
+      85.1,
+      1.9
+    ],
+    "full_diffusion+repair+fb": [
+      90.0,
+      0.69
+    ],
+    "fallback_fires": {
+      "full": 34,
+      "diff+fb": 53,
+      "linear+repair+fb": 102
+    }
+  },
+  "partC_time_budget": {
+    "iters500": {
+      "SR": 89.0,
+      "time": {
+        "mean": 9.02,
+        "median": 7.26,
+        "p95": 19.8,
+        "max": 22.6
+      },
+      "fb": 24
+    },
+    "iters2000": {
+      "SR": 90.2,
+      "time": {
+        "mean": 9.0,
+        "median": 7.21,
+        "p95": 20.1,
+        "max": 23.6
+      },
+      "fb": 29
+    },
+    "iters6000": {
+      "SR": 90.8,
+      "time": {
+        "mean": 9.02,
+        "median": 7.15,
+        "p95": 21.2,
+        "max": 26.8
+      },
+      "fb": 32
+    }
+  },
+  "partD_generalization": {
+    "global": [
+      81.3,
+      2.48
+    ],
+    "hybrid": [
+      90.0,
+      0.69
+    ],
+    "both": [
+      89.3,
+      0.17
+    ],
+    "edmp_hybrid_1seed": 84.5
+  },
+  "refs": {
+    "repair_only": 81.8,
+    "rrt_only": 67.0,
+    "published_gpd": 92.8
+  }
+}
