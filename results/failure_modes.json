@@ -1,0 +1,31 @@
+{
+  "per_type": {
+    "tabletop": {
+      "success": 50
+    },
+    "cubby": {
+      "dynamic_only": 10,
+      "success": 36,
+      "path_collision": 3,
+      "goal_infeasible": 1
+    },
+    "merged_cubby": {
+      "dynamic_only": 10,
+      "success": 29,
+      "path_collision": 8,
+      "goal_infeasible": 3
+    },
+    "dresser": {
+      "dynamic_only": 11,
+      "success": 33,
+      "path_collision": 5,
+      "goal_infeasible": 1
+    }
+  },
+  "agg": {
+    "success": 148,
+    "dynamic_only": 31,
+    "path_collision": 16,
+    "goal_infeasible": 5
+  }
+}

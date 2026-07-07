@@ -1,0 +1,68 @@
+{
+  "d7_iters0": {
+    "n": 400,
+    "success": 287,
+    "SR": 71.8,
+    "avg_time": 7.23
+  },
+  "d7_iters20": {
+    "n": 400,
+    "success": 322,
+    "SR": 80.5,
+    "avg_time": 7.91
+  },
+  "d7_iters40": {
+    "n": 400,
+    "success": 325,
+    "SR": 81.2,
+    "avg_time": 8.7
+  },
+  "d7_anchor": {
+    "n": 400,
+    "success": 333,
+    "SR": 83.2,
+    "avg_time": 8.98
+  },
+  "d7_iters100": {
+    "n": 400,
+    "success": 320,
+    "SR": 80.0,
+    "avg_time": 9.83
+  },
+  "d7_dens1": {
+    "n": 400,
+    "success": 310,
+    "SR": 77.5,
+    "avg_time": 9.42
+  },
+  "d7_dens2": {
+    "n": 400,
+    "success": 319,
+    "SR": 79.8,
+    "avg_time": 9.14
+  },
+  "d7_dens5": {
+    "n": 400,
+    "success": 318,
+    "SR": 79.5,
+    "avg_time": 8.87
+  },
+  "d7_mid0": {
+    "n": 400,
+    "success": 319,
+    "SR": 79.8,
+    "avg_time": 8.17
+  },
+  "d7_mid0p5": {
+    "n": 400,
+    "success": 317,
+    "SR": 79.2,
+    "avg_time": 9.13
+  },
+  "d7_mid2": {
+    "n": 400,
+    "success": 325,
+    "SR": 81.2,
+    "avg_time": 8.94
+  }
+}

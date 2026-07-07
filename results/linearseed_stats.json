@@ -1,0 +1,18 @@
+{
+  "naive_base": [
+    18.5,
+    18.75,
+    18.25
+  ],
+  "naive_d6": [
+    55.0,
+    56.0,
+    54.0
+  ],
+  "naive_base_mean": 18.5,
+  "naive_base_std": 0.25,
+  "naive_d6_mean": 55.0,
+  "naive_d6_std": 1.0,
+  "diff_base_mean": 72.9,
+  "diff_d6_mean": 81.8
+}

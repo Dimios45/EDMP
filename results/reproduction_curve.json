@@ -1,0 +1,54 @@
+{
+  "reproduction_k32_scale1": {
+    "label": "K=32, scale 1 (baseline)",
+    "SR": 73.2,
+    "avg_t": 7.26
+  },
+  "reproduction_k64_scale1": {
+    "label": "K=64, scale 1",
+    "SR": 69.8,
+    "avg_t": 8.41
+  },
+  "reproduction_k128_scale1": {
+    "label": "K=128, scale 1",
+    "SR": 76.5,
+    "avg_t": 10.88
+  },
+  "reproduction_k32_scale2": {
+    "label": "K=32, scale 2",
+    "SR": 76.0,
+    "avg_t": 7.3
+  },
+  "reproduction_k32_scale3": {
+    "label": "K=32, scale 3",
+    "SR": 72.8,
+    "avg_t": 7.29
+  },
+  "reproduction_k128_scale2": {
+    "label": "K=128, scale 2",
+    "SR": 73.8,
+    "avg_t": 10.86
+  },
+  "reproduction_k128_scale3": {
+    "label": "K=128, scale 3",
+    "SR": 76.5,
+    "avg_t": 10.87
+  },
+  "reproduction_sphereguid_k32": {
+    "label": "K=32 + sphere-guidance",
+    "SR": 67.2,
+    "avg_t": 3.43
+  },
+  "reproduction_sphereguid_k128": {
+    "label": "K=128 + sphere-guidance",
+    "SR": 72.0,
+    "avg_t": 4.13
+  },
+  "_meta": {
+    "baseline": 73.2,
+    "best": 76.5,
+    "paper_gpd_stitched_hybrid": 92.8,
+    "in_system_gain": 3.3,
+    "residual": 16.3
+  }
+}

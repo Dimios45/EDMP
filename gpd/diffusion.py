@@ -34,7 +34,15 @@ class PolynomialDiffusion(Diffusion):
                             start: np.ndarray = None,
                             goal:  np.ndarray = None,
                             condition: bool = True,
-                            benchmarking: bool = False) -> np.ndarray:
+                            benchmarking: bool = False,
+                            extra_candidate_steps: int = 0,
+                            smoothness_weight: float = 0.0,
+                            scene_obs: np.ndarray = None,
+                            scene_mask: np.ndarray = None,
+                            cfg_weight: float = 1.0,
+                            sphere_cost=None,
+                            smc_cost=None, smc_every: int = 0,
+                            smc_temp: float = 1.0) -> np.ndarray:
         """
         GPU-native guided denoising in Bernstein control-point space.
 
@@ -53,6 +61,19 @@ class PolynomialDiffusion(Diffusion):
         B_gpu         = torch.tensor(self.bern.B,    dtype=torch.float32, device=dev)  # (N, M)
         gs_gpu        = torch.tensor(guidance_schedule, dtype=torch.float32, device=dev)  # (B, T)
 
+        # Second-difference (curvature) operator on control points, for the
+        # smoothness-constrained representation experiment. L: (M-2, M) with
+        # [1,-2,1] stencil; penalty = ||L alpha||^2 -> grad = 2 (L^T L) alpha.
+        # Re-imposes the low-degree smoothness prior that a larger n_control
+        # otherwise discards (tests the "compression is a regularizer" thesis).
+        LtL_gpu = None
+        if smoothness_weight > 0.0 and self.n_control >= 3:
+            M = self.n_control
+            L = np.zeros((M - 2, M), dtype=np.float32)
+            for i in range(M - 2):
+                L[i, i:i + 3] = [1.0, -2.0, 1.0]
+            LtL_gpu = torch.tensor(2.0 * (L.T @ L), dtype=torch.float32, device=dev)  # (M, M)
+
         start_t = torch.tensor(start, dtype=torch.float32, device=dev)  # (7,)
         goal_t  = torch.tensor(goal,  dtype=torch.float32, device=dev)  # (7,)
 
@@ -69,6 +90,18 @@ class PolynomialDiffusion(Diffusion):
 
         model.train(False)
         period = 2
+        collected = []   # for GPD-stitched: trajectories from the last few denoising steps
+
+        # ----- Scene conditioning: precompute scene embedding once -----
+        cond_emb = None
+        if scene_obs is not None:
+            with torch.no_grad():
+                o = torch.tensor(scene_obs, dtype=torch.float32, device=dev)
+                m = torch.tensor(scene_mask, dtype=torch.bool, device=dev)
+                if o.dim() == 2:                       # (S,F) -> (1,S,F)
+                    o = o.unsqueeze(0); m = m.unsqueeze(0)
+                emb = model.scene_embed(o, m)          # (1, time_dim)
+                cond_emb = emb.expand(batch_size, -1).contiguous()
 
         for t in range(self.T, 0, -1):
             if benchmarking:
@@ -76,8 +109,14 @@ class PolynomialDiffusion(Diffusion):
 
             # ----- Model forward — fully on GPU, no numpy -----
             with torch.no_grad():
-                t_in = torch.tensor([float(t)], dtype=torch.float32, device=dev)
-                eps  = model(alpha_t, t_in)           # (batch, 7, M) on GPU
+                t_in = torch.full((batch_size,), float(t), dtype=torch.float32, device=dev)
+                if cond_emb is None:
+                    eps = model(alpha_t, t_in)         # unconditional model
+                else:
+                    # Classifier-free guidance: eps_u + w (eps_c - eps_u)
+                    eps_c = model(alpha_t, t_in, scene_emb=cond_emb)
+                    eps_u = model(alpha_t, t_in)       # null embedding path
+                    eps = eps_u + cfg_weight * (eps_c - eps_u)
                 eps  = torch.nan_to_num(eps, nan=0.0, posinf=0.0, neginf=0.0)
                 # Clip eps to prevent gradient explosions
                 eps  = torch.clamp(eps, -5.0, 5.0)
@@ -102,16 +141,31 @@ class PolynomialDiffusion(Diffusion):
                     q_int_gpu = torch.clamp(q_t[:, :, 1:-1],
                                             lower[:, None], upper[:, None])
 
-                # guide.get_gradient: numpy in/out, GPU compute internally
-                grad_q_np = guide.get_gradient(
-                    q_int_gpu.cpu().numpy(), start[:], goal[:], t
-                )  # (batch, 7, N-2)
-
                 with torch.no_grad():
                     full_grad = torch.zeros(batch_size, num_channels,
                                             self.traj_len, device=dev)
-                    full_grad[:, :, 1:-1] = torch.tensor(
-                        grad_q_np, dtype=torch.float32, device=dev)
+                if sphere_cost is not None:
+                    # Exact sphere-SDF (oriented-box) guidance: autograd the
+                    # differentiable penetration cost w.r.t. the waypoints, then
+                    # unit-normalize per sample so the tuned schedule scale applies
+                    # (mirrors the guide's grad_norm). No clearance/expansion margin.
+                    q_full = q_t.detach().clone().requires_grad_(True)
+                    pen = sphere_cost.cost(q_full, t=0, batch_size=batch_size).sum()
+                    g = torch.autograd.grad(pen, q_full)[0]           # (batch, 7, N)
+                    with torch.no_grad():
+                        gi = g[:, :, 1:-1]
+                        n = gi.flatten(1).norm(dim=1).clamp(min=1e-8).view(-1, 1, 1)
+                        full_grad[:, :, 1:-1] = gi / n
+                else:
+                    # guide.get_gradient: numpy in/out, GPU compute internally
+                    grad_q_np = guide.get_gradient(
+                        q_int_gpu.cpu().numpy(), start[:], goal[:], t
+                    )  # (batch, 7, N-2)
+                    with torch.no_grad():
+                        full_grad[:, :, 1:-1] = torch.tensor(
+                            grad_q_np, dtype=torch.float32, device=dev)
+
+                with torch.no_grad():
                     # Precondition: dJ/d_alpha = full_grad_q @ B
                     grad_alpha = full_grad @ B_gpu                    # (batch, 7, M)
                     # Zero boundary gradients — start/goal control points are
@@ -121,15 +175,43 @@ class PolynomialDiffusion(Diffusion):
                     scale = gs_gpu[:, t - 1].view(batch_size, 1, 1)
                     alpha_t -= scale * grad_alpha
 
+            # ----- Smoothness (curvature) regularization on control points -----
+            if LtL_gpu is not None:
+                with torch.no_grad():
+                    grad_smooth = alpha_t @ LtL_gpu              # (batch, 7, M)
+                    grad_smooth[:, :, 0]  = 0.0                  # don't move pinned
+                    grad_smooth[:, :, -1] = 0.0                  # start/goal points
+                    alpha_t -= smoothness_weight * grad_smooth
+
             # Re-pin boundary conditions (also guards against numerical drift)
             with torch.no_grad():
                 if condition:
                     alpha_t[:, :, 0]  = start_t
                     alpha_t[:, :, -1] = goal_t
 
+            # ----- SMC / particle steering: resample the K particles by a feasibility
+            # potential (sphere-SDF penetration, GPU-cheap) in the second half of the
+            # reverse chain, concentrating candidates in feasible modes as they form. -----
+            if smc_cost is not None and smc_every > 0 and t <= self.T // 2 \
+                    and t >= 4 and (t % smc_every == 0) and batch_size > 1:
+                with torch.no_grad():
+                    q = torch.clamp(alpha_t @ B_gpu.T, lower[:, None], upper[:, None])
+                    pen = smc_cost.cost(q, t=0, batch_size=batch_size).sum(dim=1)  # (K,)
+                    w = torch.softmax(-pen / max(smc_temp, 1e-6), dim=0)
+                    idx = torch.multinomial(w, batch_size, replacement=True)
+                    alpha_t = alpha_t[idx].contiguous()
+
+            # GPD-stitched: collect candidate trajectories from the last few steps
+            if extra_candidate_steps > 0 and t <= extra_candidate_steps:
+                with torch.no_grad():
+                    collected.append((alpha_t @ B_gpu.T).cpu().numpy())
+
         # Expand final control points to waypoints
         with torch.no_grad():
             trajectories = (alpha_t @ B_gpu.T).cpu().numpy()  # (batch, 7, N)
+        if collected:
+            # (n_steps * batch, 7, N) — diverse candidate pool for stitching
+            return np.concatenate(collected, axis=0)
         return trajectories
 
     # ------------------------------------------------------------------

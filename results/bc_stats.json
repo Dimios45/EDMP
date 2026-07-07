@@ -1,0 +1,34 @@
+{
+  "B2_oracle_k32": {
+    "oracle_norepair": [
+      68,
+      72,
+      72,
+      71,
+      72
+    ],
+    "oracle_repair": [
+      76,
+      79,
+      79,
+      78,
+      79
+    ]
+  },
+  "C3_learned": {
+    "learned_repair": [
+      68,
+      63,
+      64,
+      64,
+      62
+    ],
+    "learned_polish": [
+      78,
+      73,
+      76,
+      76,
+      75
+    ]
+  }
+}
